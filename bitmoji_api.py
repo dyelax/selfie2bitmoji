@@ -333,7 +333,7 @@ glasses_styles = [
 hair_styles = {
     'female': [
         '"cranium":"cranium_bm2","forehead":"forehead_bm2","hair_back":"hair_back_blank","hair_front":"hair_front_bm2","hairbottom":"hairbottom_bm2"',
-        '"cranium":"cranium_bm8","forehead":"forehead_bm2","hair_back":"hair_back_blank","hair_front":"hair_front_bm8","hairbottom":"hairbottom_bm8"%',
+        '"cranium":"cranium_bm8","forehead":"forehead_bm2","hair_back":"hair_back_blank","hair_front":"hair_front_bm8","hairbottom":"hairbottom_bm8"',
         '"cranium":"cranium_bm14","forehead":"forehead_bm2","hair_back":"hair_back_blank","hair_front":"hair_front_bm14","hairbottom":"hairbottom_bm14"',
         '"cranium":"cranium_bm4","forehead":"forehead_bm2","hair_back":"hair_back_bm4","hair_front":"hair_front_bm4","hairbottom":"hairbottom_bm4"',
         '"cranium":"cranium_bm10","forehead":"forehead_bm2","hair_back":"hair_back_bm10","hair_front":"hair_front_bm10","hairbottom":"hairbottom_bm10"',

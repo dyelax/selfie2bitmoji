@@ -1,10 +1,16 @@
 import requests
-import shutil
+import argparse
 import numpy as np
+from uuid import uuid1
+import multiprocessing
+from os.path import join
+from os import listdir
+from PIL import Image
+from io import BytesIO
+from time import sleep
+
 import bitmoji_api as api
-
-
-# def get_url():
+from utils import get_dir
 
 def get_random_parameters():
     """
@@ -97,6 +103,22 @@ def get_random_parameters():
     # Generate vectors
     ##
 
+    # Get absolute indices for gendered parameters
+    hair_styles_abs_len  = len(api.hair_styles['female'])  + len(api.hair_styles['male'])
+    brow_styles_abs_len  = len(api.brow_styles['female'])  + len(api.brow_styles['male'])
+    nose_styles_abs_len  = len(api.nose_styles['female'])  + len(api.nose_styles['male'])
+    mouth_styles_abs_len = len(api.mouth_styles['female']) + len(api.mouth_styles['male'])
+
+    hair_style_abs_i  = hair_style_i
+    brow_style_abs_i  = brow_style_i
+    nose_style_abs_i  = nose_style_i
+    mouth_style_abs_i = mouth_style_i
+    if gender_str == 'male':
+        hair_style_abs_i  += len(api.hair_styles['female'])
+        brow_style_abs_i  += len(api.brow_styles['female'])
+        nose_style_abs_i  += len(api.nose_styles['female'])
+        mouth_style_abs_i += len(api.mouth_styles['female'])
+
     vecs = []
     vecs.append(one_hot(len(api.genders), gender_i))
     vecs.append(one_hot(len(api.proportions), proportion_i))
@@ -104,10 +126,10 @@ def get_random_parameters():
     vecs.append(one_hot(len(api.cheek_details), cheek_details_i))
     vecs.append(one_hot(len(api.face_lines), face_lines_i))
     # vecs.append(one_hot(len(api.glasses_styles), glasses_style_i))
-    vecs.append(one_hot(len(api.hair_styles[gender_str]), hair_style_i))
-    vecs.append(one_hot(len(api.brow_styles[gender_str]), brow_style_i))
-    vecs.append(one_hot(len(api.nose_styles[gender_str]), nose_style_i))
-    vecs.append(one_hot(len(api.mouth_styles[gender_str]), mouth_style_i))
+    vecs.append(one_hot(hair_styles_abs_len, hair_style_abs_i))
+    vecs.append(one_hot(brow_styles_abs_len, brow_style_abs_i))
+    vecs.append(one_hot(nose_styles_abs_len, nose_style_abs_i))
+    vecs.append(one_hot(mouth_styles_abs_len, mouth_style_abs_i))
     if has_eyeshadow:
         vecs.append(one_hot(len(api.eyeshadow_styles), eyeshadow_style_i))
     else:
@@ -122,7 +144,7 @@ def get_random_parameters():
     vecs.append(one_hot(len(api.lip_colors), lip_color_i))
     vecs.append(one_hot(len(api.eye_colors), eye_color_i))
     vecs.append(one_hot(len(api.brow_colors), brow_color_i))
-    # Don't need to if case with has_blush because blush_colors has a 0
+    # Don't need to check if has_blush because blush_colors has a 0
     # index that means none. has_blush is just to make sure that fake index
     # doesn't get added to the URL.
     vecs.append(one_hot(len(api.blush_colors), blush_color_i))
@@ -135,56 +157,83 @@ def get_random_parameters():
     else:
         vecs.append(np.zeros(len(api.beard_colors)))
 
-    return np.array(vecs), url
+    """
+    Currently (11/21/17), param vec is a concatenation of the following (in order):
+    - genders (2)
+    - proportions (9)
+    - eye_details (8)
+    - cheek_details (7)
+    - face_lines (15)
+    - hair_styles (48)
+    - brow_styles (8)
+    - nose_styles (18)
+    - mouth_styles (6)
+    - eyeshadow_styles (2)
+    - beard_styles (12)
+    - skin_colors (20) # Non-natural colors excluded
+    - hair_colors (14) # Non-natural colors excluded
+    - lip_colors (43)
+    - eye_colors (18)
+    - brow_colors (17)
+    - blush_colors (18) # No-blush option included
+    - eyeshadow_colors (18)
+    - beard_colors (17) # Non-natural colors excluded
+    """
+    param_vec = np.concatenate(vecs)
 
-def one_hot(size, i):
+    return param_vec, url
+
+
+def one_hot(size, label):
+    """
+    Returns a zero-vector of length size, with a single 1
+    """
     a = np.zeros(size)
-    a[i] = 1
+    a[label] = 1
     return a
 
 
-from uuid import uuid1
-def download(url):
-    # for url in urls:
+def download(params_url):
+    params, url = params_url
     r = requests.get(url, stream=True)
     if r.status_code == 200:
-        with open('data/%s.png' % uuid1().hex, 'wb') as f:
-            r.raw.decode_content = True
-            shutil.copyfileobj(r.raw, f)
+        # Successful download. Save the parameters and URL
+        out_path = join(get_dir(join('data', 'bitmoji')), uuid1().hex + '.npz')
+        img = np.array(Image.open(BytesIO(r.content)))[:, :, :3]
+        url_array = np.array(url)
+
+        np.savez_compressed(out_path, parameters=params, image=img, url=url_array)
     else:
         print r.status_code
         print url
 
-import multiprocessing
-from time import time, sleep
-from os import system
 if __name__ == '__main__':
-    system('rm data/*.png')
-    # print 'Single process'
-    # single_start = time()
-    # download(80)
-    # single_end = time()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-n',
+                        help='The number of bitmoji to download',
+                        default=1,
+                        type=int)
+    parser.add_argument('--processes',
+                        help='The number of processes to use to parallelize '
+                             'the download',
+                        default=8,
+                        type=int)
+    args = parser.parse_args()
 
-    urls = []
-    for i in xrange(80):
-        urls.append(get_random_parameters()[1])
-        # sleep(0.1)
+    params_urls = [get_random_parameters() for i in xrange(args.n)]
 
-    # download(urls)
-
-    pool = multiprocessing.Pool(processes=8)
-    pool_outputs = pool.map(download, urls)
+    pool = multiprocessing.Pool(processes=args.processes)
+    pool_outputs = pool.map(download, params_urls)
     pool.close()
     pool.join()
-    # ps = []
-    # for i in xrange(8):
-    #     p = Process(target=download, args=(urls[i:i+10],))
-    #     ps.append(p)
-    #     p.start()
-    #
-    # for p in ps:
-    #     p.join()
 
     print 'Done!'
 
-    # print
+    # # Test np save:
+    #
+    # with np.load('/Users/matt/Programming/Deep-Learning/projects/selfie2bitmoji/data/bitmoji/1cbb7366ce8711e7860e3c15c2c6135c.npz') as arr:
+    #     print arr['parameters']
+    #     print arr['url']
+    #     img = Image.fromarray(arr['image'], 'RGB')
+    #     img.show()
+
