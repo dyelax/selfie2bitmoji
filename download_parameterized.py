@@ -195,17 +195,21 @@ def one_hot(size, label):
 
 def download(params_url):
     params, url = params_url
-    r = requests.get(url, stream=True)
-    if r.status_code == 200:
-        # Successful download. Save the parameters and URL
-        out_path = join(get_dir(join('data', 'bitmoji')), uuid1().hex + '.npz')
-        img = np.array(Image.open(BytesIO(r.content)))[:, :, :3]
-        url_array = np.array(url)
+    try:
+        r = requests.get(url, stream=True)
 
-        np.savez_compressed(out_path, parameters=params, image=img, url=url_array)
-    else:
-        print r.status_code
-        print url
+        if r.status_code == 200:
+            # Successful download. Save the parameters and URL
+            out_path = join(get_dir(join('data', 'bitmoji')), uuid1().hex + '.npz')
+            img = np.array(Image.open(BytesIO(r.content)))[:, :, :3]
+            url_array = np.array(url)
+
+            np.savez_compressed(out_path, parameters=params, image=img, url=url_array)
+        else:
+            print r.status_code
+            print url
+    except requests.exceptions.ConnectionError as e:
+        print e
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
