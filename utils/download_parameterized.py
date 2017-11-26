@@ -1,16 +1,16 @@
-import requests
 import argparse
-import numpy as np
-from uuid import uuid1
 import multiprocessing
-from os.path import join
-from os import listdir
-from PIL import Image
 from io import BytesIO
-from time import sleep
+from os.path import join
+from uuid import uuid1
 
-import bitmoji_api as api
-from utils import get_dir
+import numpy as np
+import requests
+from PIL import Image
+
+import misc.bitmoji_api as api
+from misc import get_dir
+
 
 def get_random_parameters():
     """
@@ -178,6 +178,8 @@ def get_random_parameters():
     - blush_colors (18) # No-blush option included
     - eyeshadow_colors (18)
     - beard_colors (17) # Non-natural colors excluded
+
+    - TOTAL DIMENSIONS: 300
     """
     param_vec = np.concatenate(vecs)
 
@@ -192,6 +194,11 @@ def one_hot(size, label):
     a[label] = 1
     return a
 
+def npz2png(paths):
+    for path in paths:
+        with np.load(path) as arr:
+            img = Image.fromarray(arr['image'], 'RGB')
+            img.save(path[:-3] + 'png')
 
 def download(params_url):
     params, url = params_url
@@ -210,6 +217,7 @@ def download(params_url):
             print url
     except requests.exceptions.ConnectionError as e:
         print e
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -240,4 +248,8 @@ if __name__ == '__main__':
     #     print arr['url']
     #     img = Image.fromarray(arr['image'], 'RGB')
     #     img.show()
+
+    # paths = glob('data/bitmoji/*.npz')
+    # npz2png(paths)
+    # print paths
 
