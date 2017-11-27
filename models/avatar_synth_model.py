@@ -39,9 +39,10 @@ class AvatarSynthModel(ModelDesc):
             # Reshape params into a 1x1 'image' for convolution
             self.preds = tf.reshape(self.params, (-1, 1, 1, NUM_PARAMS))
             for i in xrange(len(arch['conv_filters']) - 1):
+                # Apply ReLU and batch norm on all but the last layer
                 activation = tf.nn.relu
                 regularizer = tf.layers.batch_normalization
-                if i == len(arch['conv_filters']) - 1:
+                if i == len(arch['conv_filters']) - 2:
                     activation = tf.nn.tanh
                     regularizer = None
 
@@ -51,23 +52,23 @@ class AvatarSynthModel(ModelDesc):
                     arch['filter_widths'][i],
                     arch['strides'][i],
                     padding=arch['padding'][i],
-                    # Apply PReLU activation on all but the last layer
                     activation=activation,
                     kernel_initializer=tf.variance_scaling_initializer,
                     bias_initializer=tf.ones_initializer,
                     # activity_regularizer=regularizer,
                     name='Deconv_' + str(i),
                 )
-                self.preds = tpDropout(self.preds, keep_prob=self.args.keep_prob)
+                if i < len(arch['conv_filters']) - 2:
+                    self.preds = tpDropout(self.preds, keep_prob=self.args.keep_prob)
 
 
             self.cost = tf.reduce_mean(tf.square(self.imgs - self.preds),
                                        name='Cost')
 
         with tf.name_scope('Summaries'):
-            # lr_summary = tf.summary.scalar('LR', self.lr)
-            cost_summary = tf.summary.scalar('Cost', self.cost)
-            preds_summary = tf.summary.image('Preds', self.preds)
+            pred_comp = tf.concat([self.imgs, self.preds], axis=2)
+            tf.summary.image('Preds', pred_comp)
+            tf.summary.scalar('Cost', self.cost)
 
     def _get_optimizer(self):
         self.lr = tf.Variable(self.args.lr, trainable=False, name='Avatar_Synth/LR')
