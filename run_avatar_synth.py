@@ -60,7 +60,7 @@ def get_config(args, model, num_gpus):
 def run(args):
     num_gpus = get_nr_gpu()
     config = get_config(args, AvatarSynthModel(args), num_gpus)
-    trainer = SyncMultiGPUTrainerParameterServer(2)
+    trainer = SyncMultiGPUTrainerParameterServer(num_gpus)
     launch_train_with_config(config, trainer)
 
     pass
