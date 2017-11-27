@@ -11,18 +11,17 @@ from utils.cli import get_avatar_synth_args
 from utils.data import avatar_synth_df
 
 
-def get_config(args, model, num_gpus):
+def get_config(args, model, num_gpus, num_towers):
     """
     Create the TensorPack Trainer configuration.
 
     :param args: The cli arguments.
     :param model: The model object to train.
     :param num_gpus: The number of gpus on which to train
+    :param num_towers: The number of data parallel towers to create
 
     :return: A TrainConfig object.
     """
-    num_towers = max(num_gpus, 1)
-
     logger.info("Running on {} towers. Batch size per tower: {}".format(
         num_towers, args.batch_size))
 
@@ -56,13 +55,15 @@ def get_config(args, model, num_gpus):
         nr_tower=num_towers
     )
 
+
 def run(args):
     num_gpus = get_nr_gpu()
-    config = get_config(args, AvatarSynthModel(args), num_gpus)
-    trainer = SyncMultiGPUTrainerParameterServer(max(num_gpus, 1))
+    num_towers = max(num_gpus, 1)
+
+    config = get_config(args, AvatarSynthModel(args), num_gpus, num_towers)
+    trainer = SyncMultiGPUTrainerParameterServer(num_towers)
     launch_train_with_config(config, trainer)
 
-    pass
 
 if __name__ == '__main__':
     run(get_avatar_synth_args())
