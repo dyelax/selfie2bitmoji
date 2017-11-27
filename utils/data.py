@@ -12,7 +12,7 @@ from models.model_architectures import IMG_DIMS
 
 class AvatarSynthDataFlow(RNGDataFlow):
     """ Produce parameters and images from a list of .npz files. """
-    def __init__(self, dir, dims=None, val_range=(-1, 1), shuffle=False):
+    def __init__(self, dir, dims=None, val_range=(-1, 1), shuffle=True):
         """
         :param dir: The paths of .npz files containing 'parameters' and 'image' arrays.
         :param dims: (h, w) tuple. If given, resize images to these dimensions.
@@ -78,7 +78,7 @@ def avatar_synth_df(dir, batch_size):
 
     :return: A dataflow for parameter to bitmoji data
     """
-    df = AvatarSynthDataFlow(dir, dims=IMG_DIMS, shuffle=True)
+    df = AvatarSynthDataFlow(dir, dims=IMG_DIMS)
     df = process_avatar_synth_data(df, batch_size)
 
     return df
