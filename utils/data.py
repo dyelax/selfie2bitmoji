@@ -2,7 +2,8 @@ import numpy as np
 from tensorpack.dataflow.base import RNGDataFlow
 from tensorpack.dataflow.common import BatchData
 from tensorpack.dataflow.prefetch import PrefetchDataZMQ
-from skimage.transform import resize
+# from skimage.transform import resize
+from cv2 import resize
 from glob import glob
 from os.path import join
 
