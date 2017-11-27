@@ -2,7 +2,8 @@ from os import environ
 environ['TENSORPACK_TRAIN_API'] = 'v2'
 from tensorpack import logger, QueueInput
 from tensorpack.train import (
-    TrainConfig, SyncMultiGPUTrainerParameterServer, launch_train_with_config)
+    TrainConfig, SyncMultiGPUTrainerParameterServer, launch_train_with_config,
+SimpleTrainer)
 from tensorpack import callbacks as cb
 from tensorpack.utils.gpu import get_nr_gpu
 
@@ -32,7 +33,8 @@ def get_config(args, model, num_gpus, num_towers):
         cb.ModelSaver(),
         cb.MinSaver('val-error-top1'),
         cb.HumanHyperParamSetter('tower0/Avatar_Synth/LR:0'),
-        cb.MergeAllSummaries(period=args.summary_freq)
+        cb.MergeAllSummaries(period=args.summary_freq),
+        cb.PrintStats()
     ]
     infs = [cb.ScalarStats('Avatar_Synth/Cost')]
 
@@ -61,7 +63,8 @@ def run(args):
     num_towers = max(num_gpus, 1)
 
     config = get_config(args, AvatarSynthModel(args), num_gpus, num_towers)
-    trainer = SyncMultiGPUTrainerParameterServer(num_towers)
+    # trainer = SyncMultiGPUTrainerParameterServer(num_towers)
+    trainer = SimpleTrainer()
     launch_train_with_config(config, trainer)
 
 
