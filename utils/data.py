@@ -89,7 +89,8 @@ class AvatarSynthDataFlow(RNGDataFlow):
             try:
                 # params = np.load(npy_path)
                 params = np.zeros(300)
-                img = imread(img_path).astype(float)
+                # img = imread(img_path).astype(float)
+                img = np.zeros(self.dims)
 
                 if self.dims is not None:
                     img = cv2.resize(
