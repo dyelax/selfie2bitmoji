@@ -33,7 +33,8 @@ def get_config(args, model, num_gpus):
     callbacks = [
         cb.ModelSaver(),
         cb.MinSaver('val-error-top1'),
-        cb.HumanHyperParamSetter('tower0/Avatar_Synth/LR:0')
+        cb.HumanHyperParamSetter('tower0/Avatar_Synth/LR:0'),
+        cb.MergeAllSummaries(period=100)
     ]
     infs = [cb.ScalarStats('Avatar_Synth/Cost')]
 
