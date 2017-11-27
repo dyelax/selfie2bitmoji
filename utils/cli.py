@@ -34,6 +34,10 @@ def get_avatar_synth_args():
                         help='The keep probability for dropout (always 1 for testing)',
                         default=0.5,
                         type=float)
+    parser.add_argument('--summary_freq',
+                        help='Frequency (in steps) with which to write tensorboard summaries',
+                        default=100,
+                        type=int)
     parser.add_argument('--gpu',
                         help='Comma separated list of GPU(s) to use.')
 
