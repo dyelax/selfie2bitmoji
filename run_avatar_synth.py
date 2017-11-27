@@ -3,7 +3,7 @@ environ['TENSORPACK_TRAIN_API'] = 'v2'
 from tensorpack import logger, QueueInput
 from tensorpack.train import (
     TrainConfig, SyncMultiGPUTrainerParameterServer, launch_train_with_config,
-SimpleTrainer)
+    SimpleTrainer, QueueInputTrainer)
 from tensorpack import callbacks as cb
 from tensorpack.utils.gpu import get_nr_gpu
 
@@ -26,15 +26,14 @@ def get_config(args, model, num_gpus, num_towers):
     logger.info("Running on {} towers. Batch size per tower: {}".format(
         num_towers, args.batch_size))
 
-    df_train = avatar_synth_df(args.train_dir, args.batch_size)
-    df_test = avatar_synth_df(args.test_dir, args.batch_size)
+    df_train = avatar_synth_df(args.train_dir, args.batch_size, npz=args.npz)
+    df_test = avatar_synth_df(args.test_dir, args.batch_size, npz=args.npz)
 
     callbacks = [
         cb.ModelSaver(),
         cb.MinSaver('val-error-top1'),
-        cb.HumanHyperParamSetter('tower0/Avatar_Synth/LR:0'),
+        cb.HumanHyperParamSetter('Avatar_Synth/LR:0'),
         cb.MergeAllSummaries(period=args.summary_freq),
-        # cb.PrintStats()
     ]
     infs = [cb.ScalarStats('Avatar_Synth/Cost')]
 
@@ -64,7 +63,7 @@ def run(args):
 
     config = get_config(args, AvatarSynthModel(args), num_gpus, num_towers)
     # trainer = SyncMultiGPUTrainerParameterServer(num_towers)
-    trainer = SimpleTrainer()
+    trainer = QueueInputTrainer()
     launch_train_with_config(config, trainer)
 
 

@@ -1,13 +1,9 @@
 import tensorflow as tf
-# from tensorpack.graph_builder.model_desc import ModelDesc
-# from tensorpack.input_source.input_source import BatchQueueInput
-# from tensorpack.dataflow import BatchQueueInput
 from tensorpack import InputDesc, ModelDesc
 from tensorpack.models.regularize import Dropout as tpDropout
 
 from model_architectures import NUM_PARAMS, IMG_DIMS
 from model_architectures import avatar_synth_model as arch
-#from utils.tfutils import w, b
 
 class AvatarSynthModel(ModelDesc):
     """

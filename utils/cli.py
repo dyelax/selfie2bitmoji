@@ -40,6 +40,9 @@ def get_avatar_synth_args():
                         type=int)
     parser.add_argument('--gpu',
                         help='Comma separated list of GPU(s) to use.')
+    parser.add_argument('--npz',
+                        help='TEST',
+                        action='store_true')
 
     args = parser.parse_args()
 
