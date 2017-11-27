@@ -5,7 +5,6 @@ from tensorpack.train import (
     TrainConfig, SyncMultiGPUTrainerParameterServer, launch_train_with_config)
 from tensorpack import callbacks as cb
 from tensorpack.utils.gpu import get_nr_gpu
-from numpy import ceil
 
 from models.avatar_synth_model import AvatarSynthModel
 from utils.cli import get_avatar_synth_args
@@ -53,7 +52,6 @@ def get_config(args, model, num_gpus):
         model=model,
         dataflow=df_train,
         callbacks=callbacks,
-        # steps_per_epoch=ceil(df_train.size() / args.batch_size),
         max_epoch=args.epochs,
         nr_tower=num_towers
     )
