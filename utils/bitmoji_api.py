@@ -255,11 +255,11 @@ eye_details = [
 cheek_details = [
     '"detail_L":"_blank","detail_R":"_blank"',
     '"detail_L":"detail_L_bm1","detail_R":"detail_L_bm1"',
-    '"detail_L":"detail_L_bm1","detail_R":"detail_L_bm7"',
-    '"detail_L":"detail_L_bm1","detail_R":"detail_L_bm8"',
-    '"detail_L":"detail_L_bm1","detail_R":"detail_L_bm9"',
-    '"detail_L":"detail_L_bm1","detail_R":"detail_L_bm10"',
-    '"detail_L":"detail_L_bm1","detail_R":"detail_L_bm11"',
+    '"detail_L":"detail_L_bm7","detail_R":"detail_L_bm7"',
+    '"detail_L":"detail_L_bm8","detail_R":"detail_L_bm8"',
+    '"detail_L":"detail_L_bm9","detail_R":"detail_L_bm9"',
+    '"detail_L":"detail_L_bm10","detail_R":"detail_L_bm10"',
+    '"detail_L":"detail_L_bm11","detail_R":"detail_L_bm11"',
 ]
 
 # Face lines:
