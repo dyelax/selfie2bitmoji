@@ -87,7 +87,8 @@ class AvatarSynthDataFlow(RNGDataFlow):
             img_path = filename + '.png'
 
             try:
-                params = np.load(npy_path)
+                # params = np.load(npy_path)
+                params = np.zeros(300)
                 img = imread(img_path).astype(float)
 
                 if self.dims is not None:
