@@ -8,6 +8,7 @@ from os.path import join
 
 from models.model_architectures import IMG_DIMS
 
+
 class AvatarSynthDataFlow(RNGDataFlow):
     """ Produce parameters and images from a list of .npz files. """
     def __init__(self, dir, dims=None, shuffle=False):
@@ -16,8 +17,8 @@ class AvatarSynthDataFlow(RNGDataFlow):
         :param dims: (h, w) tuple. If given, resize images to these dimensions.
         :param shuffle: Shuffle the input order for each epoch.
         """
-        paths = glob(join(dir + '*.npz'))
-        assert len(paths) > 0, 'No .npz files in dir.'
+        paths = glob(join(dir, '*.npz'))
+        assert len(paths) > 0, 'No .npz files in dir %s.' % dir
         self.paths = paths
         self.dims = dims
         self.shuffle = shuffle
@@ -59,21 +60,36 @@ def process_avatar_synth_data(df, batch_size):
     return df
 
 
-def get_avatar_synth_epoch(train_dir, test_dir, batch_size):
+def avatar_synth_df(dir, batch_size):
     """
     Get data for training and evaluating the AvatarSynthModel.
 
-    :param train_dir: The train data directory.
-    :param test_dir: The test data directory.
+    :param dir: The data directory.
     :param batch_size: The minibatch size.
 
-    :return: A tuple (train_generator, test_generator). Generators for train and
-             test batches, respectively.
+    :return: A dataflow for parameter to bitmoji data
     """
-    train_df = AvatarSynthDataFlow(train_dir, dims=IMG_DIMS, shuffle=True)
-    test_df = AvatarSynthDataFlow(test_dir, dims=IMG_DIMS, shuffle=True)
+    df = AvatarSynthDataFlow(dir, dims=IMG_DIMS, shuffle=True)
+    df = process_avatar_synth_data(df, batch_size)
 
-    train_df = process_avatar_synth_data(train_df, batch_size)
-    test_df = process_avatar_synth_data(test_df, batch_size)
+    return df
 
-    return train_df.get_data(), test_df.get_data()
+
+# def get_avatar_synth_epoch(train_dir, test_dir, batch_size):
+#     """
+#     Get data for training and evaluating the AvatarSynthModel.
+#
+#     :param train_dir: The train data directory.
+#     :param test_dir: The test data directory.
+#     :param batch_size: The minibatch size.
+#
+#     :return: A tuple (train_generator, test_generator). Generators for train and
+#              test batches, respectively.
+#     """
+#     train_df = AvatarSynthDataFlow(train_dir, dims=IMG_DIMS, shuffle=True)
+#     test_df = AvatarSynthDataFlow(test_dir, dims=IMG_DIMS, shuffle=True)
+#
+#     train_df = process_avatar_synth_data(train_df, batch_size)
+#     test_df = process_avatar_synth_data(test_df, batch_size)
+#
+#     return train_df.get_data(), test_df.get_data()

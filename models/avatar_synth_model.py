@@ -24,9 +24,8 @@ class AvatarSynthModel(ModelDesc):
         """
         :return: The input descriptions for TensorPack.
         """
-        with tf.name_scope('Avatar_Synth'):
-            return [InputDesc(tf.float32, (None, NUM_PARAMS), 'parameters'),
-                    InputDesc(tf.float32, (None,) + IMG_DIMS, 'images')]
+        return [InputDesc(tf.float32, (None, NUM_PARAMS), 'Avatar_Synth/Parameters'),
+                InputDesc(tf.float32, (None,) + IMG_DIMS, 'Avatar_Synth/Images')]
 
     def _build_graph(self, inputs):
         """
@@ -40,18 +39,24 @@ class AvatarSynthModel(ModelDesc):
             # Reshape params into a 1x1 'image' for convolution
             self.preds = tf.reshape(self.params, (-1, 1, 1, NUM_PARAMS))
             for i in xrange(len(arch['conv_filters']) - 1):
+                activation = tf.nn.relu
+                regularizer = tf.layers.batch_normalization
+                if i == len(arch['conv_filters']) - 1:
+                    activation = tf.nn.tanh
+                    regularizer = None
+
                 self.preds = tf.layers.conv2d_transpose(
                     self.preds,
                     arch['conv_filters'][i + 1],
-                    arch['conv_widths'][i],
+                    arch['filter_widths'][i],
                     arch['strides'][i],
                     padding=arch['padding'][i],
                     # Apply PReLU activation on all but the last layer
-                    activation=(tf.keras.layers.PReLU if i < len(arch['conv_filters']) - 2 else None),
-                    kernel_initializer=tf.keras.initializers.glorot_normal,
-                    bias_initializer=tf.initializers.ones,
-                    activity_regularizer=tf.layers.batch_normalization,
-                    name='Deconv_' + str(i)
+                    activation=activation,
+                    kernel_initializer=tf.variance_scaling_initializer,
+                    bias_initializer=tf.ones_initializer,
+                    # activity_regularizer=regularizer,
+                    name='Deconv_' + str(i),
                 )
                 self.preds = tpDropout(self.preds, keep_prob=self.args.keep_prob)
 
@@ -59,8 +64,15 @@ class AvatarSynthModel(ModelDesc):
             self.cost = tf.reduce_mean(tf.square(self.imgs - self.preds),
                                        name='Cost')
 
+        with tf.name_scope('Summaries'):
+            # lr_summary = tf.summary.scalar('LR', self.lr)
+            cost_summary = tf.summary.scalar('Cost', self.cost)
+            preds_summary = tf.summary.image('Preds', self.preds)
+
     def _get_optimizer(self):
-        return tf.train.AdamOptimizer(learning_rate=self.args.lr)
+        self.lr = tf.Variable(self.args.lr, trainable=False, name='Avatar_Synth/LR')
+        print(self.lr.name)
+        return tf.train.AdamOptimizer(learning_rate=self.lr)
 
 
 ###########################################
@@ -105,3 +117,5 @@ class AvatarSynthModel(ModelDesc):
     #                     preds = tf.keras.layers.PReLU(preds)
     #
     #     return preds
+
+
