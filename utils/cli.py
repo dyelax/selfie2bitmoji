@@ -20,16 +20,20 @@ def get_avatar_synth_args():
                         help='Directory from which to load a model checkpoint')
     parser.add_argument('--epochs',
                         help='Number of epochs to train',
-                        default=1)
+                        default=1,
+                        type=int)
     parser.add_argument('--batch_size',
                         help='Minibatch size',
-                        default=128)
+                        default=128,
+                        type=int)
     parser.add_argument('--lr',
                         help='Learning rate',
-                        default=3e-5)
+                        default=3e-5,
+                        type=float)
     parser.add_argument('--keep_prob',
                         help='The keep probability for dropout (always 1 for testing)',
-                        default=0.5)
+                        default=0.5,
+                        type=float)
     parser.add_argument('--gpu',
                         help='Comma separated list of GPU(s) to use.')
 
