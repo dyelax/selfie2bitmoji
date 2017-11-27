@@ -3,7 +3,7 @@ from tensorpack.dataflow.base import RNGDataFlow
 from tensorpack.dataflow.common import BatchData
 from tensorpack.dataflow.prefetch import PrefetchDataZMQ
 # from skimage.transform import resize
-from cv2 import resize
+import cv2
 from glob import glob
 from os.path import join
 
@@ -38,7 +38,8 @@ class AvatarSynthDataFlow(RNGDataFlow):
                     img = arrs['image']
 
                     if self.dims is not None:
-                        img = resize(img, self.dims)
+                        img = cv2.resize(
+                            img, self.dims[:-1], interpolation=cv2.INTER_AREA)
 
                     yield [params, img]
 
