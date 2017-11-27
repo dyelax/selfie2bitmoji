@@ -90,16 +90,16 @@ class AvatarSynthDataFlow(RNGDataFlow):
                 # params = np.load(npy_path)
                 params = np.zeros(300)
                 # img = imread(img_path).astype(float)
-                img = np.zeros(self.dims)
+                img = np.random.random(self.dims)
 
-                if self.dims is not None:
-                    img = cv2.resize(
-                        img, self.dims[:-1], interpolation=cv2.INTER_AREA)
-
-                # Rescale
-                diff = self.val_range[1] - self.val_range[0]
-                img /= (255. / diff)
-                img += self.val_range[0]
+                # if self.dims is not None:
+                #     img = cv2.resize(
+                #         img, self.dims[:-1], interpolation=cv2.INTER_AREA)
+                #
+                # # Rescale
+                # diff = self.val_range[1] - self.val_range[0]
+                # img /= (255. / diff)
+                # img += self.val_range[0]
 
                 yield [params, img]
             except Exception as e:
