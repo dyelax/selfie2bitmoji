@@ -12,16 +12,18 @@ from models.model_architectures import IMG_DIMS
 
 class AvatarSynthDataFlow(RNGDataFlow):
     """ Produce parameters and images from a list of .npz files. """
-    def __init__(self, dir, dims=None, shuffle=False):
+    def __init__(self, dir, dims=None, val_range=(-1, 1), shuffle=False):
         """
         :param dir: The paths of .npz files containing 'parameters' and 'image' arrays.
         :param dims: (h, w) tuple. If given, resize images to these dimensions.
+        :param val_range: (min, max) tuple. Rescale images to this range.
         :param shuffle: Shuffle the input order for each epoch.
         """
         paths = glob(join(dir, '*.npz'))
         assert len(paths) > 0, 'No .npz files in dir %s.' % dir
         self.paths = paths
         self.dims = dims
+        self.val_range = val_range
         self.shuffle = shuffle
 
     def size(self):
@@ -35,11 +37,16 @@ class AvatarSynthDataFlow(RNGDataFlow):
             with np.load(path) as arrs:
                 try:
                     params =  arrs['parameters']
-                    img = arrs['image']
+                    img = arrs['image'].astype(float)
 
                     if self.dims is not None:
                         img = cv2.resize(
                             img, self.dims[:-1], interpolation=cv2.INTER_AREA)
+
+                    # Rescale
+                    diff = self.val_range[1] - self.val_range[0]
+                    img /= (255. / diff)
+                    img += self.val_range[0]
 
                     yield [params, img]
 

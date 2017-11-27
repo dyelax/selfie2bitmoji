@@ -38,8 +38,8 @@ def get_config(args, model, num_gpus):
     ]
     infs = [cb.ScalarStats('Avatar_Synth/Cost')]
 
-    if num_gpus > 0:
-        callbacks.append(cb.GPUUtilizationTracker())
+    # if num_gpus > 0:
+    #     callbacks.append(cb.GPUUtilizationTracker())
 
     if num_towers == 1:
         # single-GPU inference with queue prefetch
