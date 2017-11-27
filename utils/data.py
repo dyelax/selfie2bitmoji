@@ -87,19 +87,17 @@ class AvatarSynthDataFlow(RNGDataFlow):
             img_path = filename + '.png'
 
             try:
-                # params = np.load(npy_path)
-                params = np.zeros(300)
-                # img = imread(img_path).astype(float)
-                img = np.random.random(self.dims)
+                params = np.load(npy_path)
+                img = imread(img_path).astype(float)
 
-                # if self.dims is not None:
-                #     img = cv2.resize(
-                #         img, self.dims[:-1], interpolation=cv2.INTER_AREA)
-                #
-                # # Rescale
-                # diff = self.val_range[1] - self.val_range[0]
-                # img /= (255. / diff)
-                # img += self.val_range[0]
+                if self.dims is not None:
+                    img = cv2.resize(
+                        img, self.dims[:-1], interpolation=cv2.INTER_AREA)
+
+                # Rescale
+                diff = self.val_range[1] - self.val_range[0]
+                img /= (255. / diff)
+                img += self.val_range[0]
 
                 yield [params, img]
             except Exception as e:
@@ -116,7 +114,7 @@ def process_avatar_synth_data(df, batch_size):
     :return: A dataflow with extra processing steps applied.
     """
     df = BatchData(df, batch_size, remainder=True)
-    df = PrefetchDataZMQ(df, 4) # start 4 processes to run the dataflow in parallel
+    df = PrefetchDataZMQ(df, 8) # start processes to run the dataflow in parallel
 
     return df
 
