@@ -2,10 +2,10 @@ import numpy as np
 from tensorpack.dataflow.base import RNGDataFlow
 from tensorpack.dataflow.common import BatchData
 from tensorpack.dataflow.prefetch import PrefetchDataZMQ
-# from skimage.transform import resize
 import cv2
 from glob import glob
 from os.path import join
+from os import remove
 
 from models.model_architectures import IMG_DIMS
 
@@ -52,6 +52,7 @@ class AvatarSynthDataFlow(RNGDataFlow):
 
                 except KeyError:
                     print ".npz file missing either 'parameters' or 'image' keys."
+                    remove(path)
 
 
 def process_avatar_synth_data(df, batch_size):
