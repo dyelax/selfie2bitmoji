@@ -37,10 +37,8 @@ class AvatarSynthModel(ModelDesc):
             for i in xrange(len(arch['conv_filters']) - 1):
                 # Apply ReLU and batch norm on all but the last layer
                 activation = tf.nn.relu
-                regularizer = tf.layers.batch_normalization
                 if i == len(arch['conv_filters']) - 2:
                     activation = tf.nn.tanh
-                    regularizer = None
 
                 self.preds = tf.layers.conv2d_transpose(
                     self.preds,
@@ -51,10 +49,10 @@ class AvatarSynthModel(ModelDesc):
                     activation=activation,
                     kernel_initializer=tf.truncated_normal_initializer,
                     bias_initializer=tf.truncated_normal_initializer,
-                    # activity_regularizer=regularizer,
                     name='Deconv_' + str(i),
                 )
                 if i < len(arch['conv_filters']) - 2:
+                    self.preds = tf.layers.batch_normalization(self.preds, name='BN_' + str(i))
                     self.preds = tpDropout(self.preds, keep_prob=self.args.keep_prob)
 
 
