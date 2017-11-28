@@ -124,7 +124,7 @@ def process_avatar_synth_data(df, batch_size):
     :return: A dataflow with extra processing steps applied.
     """
     df = BatchData(df, batch_size, remainder=True)
-    df = PrefetchDataZMQ(df, 16) # start processes to run the dataflow in parallel
+    # df = PrefetchDataZMQ(df, 16) # start processes to run the dataflow in parallel
 
     return df
 
