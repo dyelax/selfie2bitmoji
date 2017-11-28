@@ -50,7 +50,7 @@ class AvatarSynthModel(ModelDesc):
                     padding=arch['padding'][i],
                     activation=activation,
                     kernel_initializer=tf.truncated_normal_initializer,
-                    bias_initializer=tf.ones_initializer,
+                    bias_initializer=tf.truncated_normal_initializer,
                     # activity_regularizer=regularizer,
                     name='Deconv_' + str(i),
                 )
