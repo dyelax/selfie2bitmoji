@@ -44,6 +44,11 @@ class AvatarSynthDataFlowNPZ(RNGDataFlow):
                         img = cv2.resize(
                             img, self.dims[:-1], interpolation=cv2.INTER_AREA)
 
+                        if img.shape != self.dims:
+                            print 'Malformed image from file %s' % path
+                            continue
+
+
                     # Rescale
                     diff = self.val_range[1] - self.val_range[0]
                     img /= (255. / diff)
