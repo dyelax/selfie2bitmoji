@@ -51,9 +51,14 @@ class AvatarSynthDataFlowNPZ(RNGDataFlow):
 
                     yield [params, img]
 
-                except KeyError:
-                    print ".npz file missing either 'parameters' or 'image' keys."
+                except KeyError as e:
+                    print "KeyError on file %s" % path
+                    print e
                     remove(path)
+                except IOError as e:
+                    print "IOError on file %s" % path
+                    print e
+
 
 class AvatarSynthDataFlow(RNGDataFlow):
     """
