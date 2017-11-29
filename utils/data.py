@@ -59,7 +59,7 @@ def process_avatar_synth_data(df, batch_size):
         imgaug.MinMaxNormalize(min=-1, max=1)
     ])
 
-    df = MultiThreadMapData(df, nr_thread=32,
+    df = MultiThreadMapData(df, nr_thread=1,
                             map_func=lambda dp: [np.load(dp[0]), augmentor.augment(imread(dp[1]))],
                             buffer_size=min(1000, df.size()))
     df = PrefetchDataZMQ(df, nr_proc=1)
