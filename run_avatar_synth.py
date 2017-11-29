@@ -26,8 +26,8 @@ def get_config(args, model, num_gpus, num_towers):
     logger.info("Running on {} towers. Batch size per tower: {}".format(
         num_towers, args.batch_size))
 
-    df_train = avatar_synth_df(args.train_dir, args.batch_size, npz=args.npz)
-    df_test = avatar_synth_df(args.test_dir, args.batch_size, npz=args.npz)
+    df_train = avatar_synth_df(args.train_dir, args.batch_size)
+    df_test = avatar_synth_df(args.test_dir, args.batch_size)
 
     callbacks = [
         cb.ModelSaver(),
