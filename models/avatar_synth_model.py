@@ -29,6 +29,11 @@ class AvatarSynthModel(ModelDesc):
 
         :param inputs: The input tensors fed in by TensorPack.
         """
+        def narrow_truncated_normal_initializer(shape, dtype=None, partition_info=None):
+            initializer = tf.truncated_normal_initializer(stddev=0.1)
+            return initializer(shape, dtype=dtype, partition_info=partition_info)
+
+
         with tf.name_scope('Avatar_Synth'):
             self.params, self.imgs = inputs
 
@@ -47,8 +52,8 @@ class AvatarSynthModel(ModelDesc):
                     arch['strides'][i],
                     padding=arch['padding'][i],
                     activation=activation,
-                    kernel_initializer=tf.truncated_normal_initializer,
-                    bias_initializer=tf.truncated_normal_initializer,
+                    kernel_initializer=narrow_truncated_normal_initializer,
+                    bias_initializer=tf.zeros_initializer,
                     name='Deconv_' + str(i),
                 )
                 if i < len(arch['conv_filters']) - 2:
