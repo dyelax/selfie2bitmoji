@@ -16,8 +16,8 @@ def get_avatar_synth_args():
     parser.add_argument('--logger_dir',
                         help='Directory to save logs and model checkpoints',
                         default=os.path.join('save', 'log', date_str()))
-    parser.add_argument('--model_load_dir',
-                        help='Directory from which to load a model checkpoint')
+    parser.add_argument('--load_path',
+                        help='Path of the model checkpoint to load')
     parser.add_argument('--epochs',
                         help='Number of epochs to train',
                         default=1,

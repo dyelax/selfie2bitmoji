@@ -4,6 +4,7 @@ from tensorpack import logger, QueueInput
 from tensorpack.train import (
     TrainConfig, SyncMultiGPUTrainerParameterServer, launch_train_with_config,
     SimpleTrainer, QueueInputTrainer, SyncMultiGPUTrainerReplicated)
+from tensorpack.tfutils.sessinit import SaverRestore
 from tensorpack import callbacks as cb
 from tensorpack.utils.gpu import get_nr_gpu
 
@@ -62,6 +63,10 @@ def run(args):
     num_towers = max(num_gpus, 1)
 
     config = get_config(args, AvatarSynthModel(args), num_gpus, num_towers)
+
+    if args.load_path:
+        config.session_init = SaverRestore(args.load_path)
+
     # trainer = SyncMultiGPUTrainerParameterServer(num_towers)
     # trainer = QueueInputTrainer()
     trainer = SyncMultiGPUTrainerReplicated(num_towers)
