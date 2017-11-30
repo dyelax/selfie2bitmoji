@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorpack import InputDesc, ModelDesc
 from tensorpack.models.regularize import Dropout as tpDropout
 
-from model_architectures import NUM_PARAMS, IMG_DIMS
+from model_architectures import BITMOJI_PARAM_SIZE, IMG_DIMS
 from model_architectures import avatar_synth_model as arch
 
 class AvatarSynthModel(ModelDesc):
@@ -20,7 +20,7 @@ class AvatarSynthModel(ModelDesc):
         """
         :return: The input descriptions for TensorPack.
         """
-        return [InputDesc(tf.float32, (None, NUM_PARAMS), 'Avatar_Synth/Parameters'),
+        return [InputDesc(tf.float32, (None, BITMOJI_PARAM_SIZE), 'Avatar_Synth/Parameters'),
                 InputDesc(tf.float32, (None,) + IMG_DIMS, 'Avatar_Synth/Images')]
 
     def _build_graph(self, inputs):
@@ -38,7 +38,7 @@ class AvatarSynthModel(ModelDesc):
             self.params, self.imgs = inputs
 
             # Reshape params into a 1x1 'image' for convolution
-            self.preds = tf.reshape(self.params, (-1, 1, 1, NUM_PARAMS))
+            self.preds = tf.reshape(self.params, (-1, 1, 1, BITMOJI_PARAM_SIZE))
             for i in xrange(len(arch['conv_filters']) - 1):
                 # Apply ReLU and batch norm on all but the last layer
                 activation = tf.nn.relu
