@@ -1,5 +1,6 @@
+from utils.bitmoji_api import BITMOJI_PARAM_SIZE
+
 FACE_ENCODING_SIZE = 256
-BITMOJI_PARAM_SIZE = 300
 IMG_DIMS = (64, 64, 3)
 
 # Model "e"

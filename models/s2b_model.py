@@ -5,7 +5,7 @@ from tensorpack.models.regularize import Dropout as tpDropout
 import model_architectures as archs
 
 from utils.tfutils import narrow_truncated_normal_initializer
-from utils.bitmoji_api import BITMOJI_PARAM_SPLIT
+from utils.bitmoji_api import BITMOJI_PARAM_SPLIT, BITMOJI_PARAM_SIZE
 
 class Selfie2BitmojiModel(ModelDesc):
     """
@@ -282,7 +282,7 @@ class Selfie2BitmojiModel(ModelDesc):
             arch = archs.avatar_synth_model
 
             # Reshape params into a 1x1 'image' for convolution
-            preds = tf.reshape(params, (-1, 1, 1, archs.BITMOJI_PARAM_SIZE))
+            preds = tf.reshape(params, (-1, 1, 1, BITMOJI_PARAM_SIZE))
             for i in xrange(len(arch['conv_filters']) - 1):
                 # Apply ReLU on all but the last layer
                 activation = tf.nn.relu
