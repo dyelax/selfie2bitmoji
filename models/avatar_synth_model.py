@@ -4,6 +4,7 @@ from tensorpack.models.regularize import Dropout as tpDropout
 
 from model_architectures import BITMOJI_PARAM_SIZE, IMG_DIMS
 from model_architectures import avatar_synth_model as arch
+from utils.tfutils import narrow_truncated_normal_initializer
 
 class AvatarSynthModel(ModelDesc):
     """
@@ -29,18 +30,13 @@ class AvatarSynthModel(ModelDesc):
 
         :param inputs: The input tensors fed in by TensorPack.
         """
-        def narrow_truncated_normal_initializer(shape, dtype=None, partition_info=None):
-            initializer = tf.truncated_normal_initializer(stddev=0.05)
-            return initializer(shape, dtype=dtype, partition_info=partition_info)
-
-
         with tf.name_scope('Avatar_Synth'):
             self.params, self.imgs = inputs
 
             # Reshape params into a 1x1 'image' for convolution
             self.preds = tf.reshape(self.params, (-1, 1, 1, BITMOJI_PARAM_SIZE))
             for i in xrange(len(arch['conv_filters']) - 1):
-                # Apply ReLU and batch norm on all but the last layer
+                # Apply ReLU on all but the last layer
                 activation = tf.nn.relu
                 if i == len(arch['conv_filters']) - 2:
                     activation = tf.nn.tanh
@@ -56,6 +52,8 @@ class AvatarSynthModel(ModelDesc):
                     bias_initializer=tf.zeros_initializer,
                     name='Deconv_' + str(i),
                 )
+
+                # Apply batch norm and dropout on all but the last layer
                 if i < len(arch['conv_filters']) - 2:
                     self.preds = tf.layers.batch_normalization(self.preds, name='BN_' + str(i))
                     self.preds = tpDropout(self.preds, keep_prob=self.args.keep_prob)
@@ -73,49 +71,3 @@ class AvatarSynthModel(ModelDesc):
         self.lr = tf.Variable(self.args.lr, trainable=False, name='Avatar_Synth/LR')
         print(self.lr.name)
         return tf.train.AdamOptimizer(learning_rate=self.lr)
-
-
-###########################################
-
-        # self.ws = []
-        # self.bs = []
-        # for i in xrange(len(arch['conv_filters']) - 1):
-        #     with tf.name_scope('Layer_' + str(i)):
-        #         # conv2d_transpose takes shape [height, width, out, in]
-        #         self.ws.append(w((arch['filter_widths'][i],
-        #                           arch['filter_widths'][i],
-        #                           arch['conv_filters'][i + 1],
-        #                           arch['conv_filters'][i])))
-        #         self.bs.append(b((arch['conv_filters'][i + 1],)))
-
-    # with tf.name_scope('Computation'):
-    #     self.preds = self._get_preds(self.params)
-    # def _get_preds(self, inputs):
-    #     """
-    #     Perform computation to generate Bitmoji image tensors given parameters.
-    #
-    #     :param inputs: The bitmoji parameter vectors.
-    #
-    #     :return: The generated image tensors for each parameter set in inputs.
-    #     """
-    #     preds = inputs
-    #
-    #     with tf.name_scope('Deconv'):
-    #         for i, (ws, bs) in zip(self.ws, self.bs):
-    #             with tf.name_scope('Layer_' + str(i)):
-    #                 out_shape = ()
-    #                 preds = tf.nn.conv2d_transpose(
-    #                     preds,
-    #                     ws,
-    #                     out_shape,
-    #                     [1, arch['strides'][i], arch['strides'][i], 1],
-    #                     padding=arch['padding'][i])
-    #                 preds = tpDropout(preds + bs)
-    #
-    #                 # Apply ReLU to all but last layer
-    #                 if i < len(self.ws) - 1:
-    #                     preds = tf.keras.layers.PReLU(preds)
-    #
-    #     return preds
-
-

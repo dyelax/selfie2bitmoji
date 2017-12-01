@@ -45,6 +45,28 @@ def conv_out_shape(in_shape, out_fms, p, k, s):
             out_fms]
 
 
+def narrow_truncated_normal_initializer(shape, dtype=None, partition_info=None):
+    """
+    A version of tf.truncated_normal_initializer with a stddev of 0.05, for use
+    with tf.layers.
+    """
+    initializer = tf.truncated_normal_initializer(stddev=0.05)
+    return initializer(shape, dtype=dtype, partition_info=partition_info)
+
+
+def softmax(input, temperature=1):
+    """
+    Softmax function with a temperature parameter.
+
+    :param input: The tensor to be softmaxed.
+    :param temperature: The temperature of the softmax function. Lower temp
+                        pushes the max closer to 1. Higher temps make values
+                        more uniform.
+
+    :return: The tensor after softmaxing with the given temperature.
+    """
+    return
+
 def log10(t):
     """
     Calculates the base-10 log of each element in t.
@@ -142,7 +164,7 @@ def batch_crop_to_bounding_box(images, offset_height, offset_width,
     return images[:, top:bottom, left:right, :]
 
 
-def leaky_relu(tensor, leak=0.01):
+def leaky_relu(tensor, leak=0.2):
     """
     Computes a leaky ReLU with the given alpha.
 

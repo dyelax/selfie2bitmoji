@@ -527,6 +527,62 @@ beard_colors = [
 ]
 
 
+##
+#
+##
+
+"""
+Currently (11/21/17), param vec is a concatenation of the following (in order):
+- genders (2)
+- proportions (9)
+- eye_details (8)
+- cheek_details (7)
+- face_lines (15)
+- hair_styles (48)
+- brow_styles (8)
+- nose_styles (18)
+- mouth_styles (6)
+- eyeshadow_styles (2)
+- beard_styles (12)
+- skin_colors (20) # Non-natural colors excluded
+- hair_colors (14) # Non-natural colors excluded
+- lip_colors (43)
+- eye_colors (18)
+- brow_colors (17)
+- blush_colors (18) # No-blush option included
+- eyeshadow_colors (18)
+- beard_colors (17) # Non-natural colors excluded
+
+- TOTAL DIMENSIONS: 300
+"""
+BITMOJI_PARAM_SPLIT = [
+    2,
+    9,
+    8,
+    7,
+    15,
+    48,
+    8,
+    18,
+    6,
+    2,
+    12,
+    20,
+    14,
+    43,
+    18,
+    17,
+    18,
+    18,
+    17
+]
+
+##
+# Test
+##
+
+# print sum(BITMOJI_PARAM_SPLIT)
+
 # num_permutations = \
 #     ((len(beard_colors) *
 #       len(beard_styles) *
