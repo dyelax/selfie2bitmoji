@@ -24,21 +24,21 @@ def get_config(args, model, num_gpus, num_towers):
 
     :return: A TrainConfig object.
     """
-    logger.info("Running on {} towers. Batch size per tower: {}".format(
-        num_towers, args.batch_size))
+    logger.info("Running on {} towers. Batch size per tower: {}".format(num_towers, args.batch_size))
 
     df_train = avatar_synth_df(args.train_dir, args.batch_size)
     df_test = avatar_synth_df(args.test_dir, args.batch_size)
 
 
-    # Approximate exponential decay of the learning rate
-    lr_sched = [(i, args.lr * args.lr_decay ** i) for i in range(args.epochs)]
     callbacks = [
         cb.ModelSaver(),
         cb.MinSaver('val-error-top1'),
-        cb.ScheduledHyperParamSetter('tower0/Avatar_Synth/LR:0', lr_sched, interp='linear'),
+        # Approximate exponential decay of the learning rate
+        cb.ScheduledHyperParamSetterWithFunc('tower0/Avatar_Synth/LR:0',
+                                             lambda epoch, lr: lr * args.lr_decay),
         cb.HumanHyperParamSetter('tower0/Avatar_Synth/LR:0'),
         cb.MergeAllSummaries(period=args.summary_freq),
+        cb.GPUUtilizationTracker()
     ]
     infs = [cb.ScalarStats('Avatar_Synth/Cost')]
 
