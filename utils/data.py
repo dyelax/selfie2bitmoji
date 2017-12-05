@@ -43,12 +43,13 @@ class AvatarSynthDataFlow(RNGDataFlow):
                 print 'File not found: %s' % npy_path
 
 
-def process_avatar_synth_data(df, batch_size):
+def process_avatar_synth_data(df, batch_size, num_threads):
     """
     Perform preprocessing for the avatar synth data.
 
     :param df: An AvatarSynthDataFlow.
     :param batch_size: The minibatch size.
+    :param num_threads: The number of threads to read and process data.
 
     :return: A dataflow with extra processing steps applied.
     """
@@ -56,7 +57,7 @@ def process_avatar_synth_data(df, batch_size):
         imgaug.MinMaxNormalize(min=-1, max=1)
     ])
 
-    df = MultiThreadMapData(df, nr_thread=4,
+    df = MultiThreadMapData(df, nr_thread=num_threads,
                             map_func=lambda dp: [np.load(dp[0]), augmentor.augment(imread(dp[1]))],
                             buffer_size=min(1000, df.size()))
     df = PrefetchDataZMQ(df, nr_proc=1)
@@ -65,17 +66,18 @@ def process_avatar_synth_data(df, batch_size):
     return df
 
 
-def avatar_synth_df(dir, batch_size):
+def avatar_synth_df(dir, batch_size, num_threads):
     """
     Get data for training and evaluating the AvatarSynthModel.
 
     :param dir: The data directory.
     :param batch_size: The minibatch size.
+    :param num_threads: The number of threads to read and process data.
 
     :return: A dataflow for parameter to bitmoji data
     """
     df = AvatarSynthDataFlow(dir)
-    df = process_avatar_synth_data(df, batch_size)
+    df = process_avatar_synth_data(df, batch_size, num_threads)
 
     return df
 

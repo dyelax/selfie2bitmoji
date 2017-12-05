@@ -43,7 +43,11 @@ def get_avatar_synth_args():
                         default=100,
                         type=int)
     parser.add_argument('--gpu',
-                        help='Comma separated list of GPU(s) to use.')
+                        help='Comma separated list of GPU(s) to use')
+    parser.add_argument('--num_threads',
+                        help='The number of threads to read and process data',
+                        default=32,
+                        type=int)
 
     args = parser.parse_args()
 
