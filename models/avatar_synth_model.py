@@ -48,7 +48,7 @@ class AvatarSynthModel(ModelDesc):
                     arch['filter_widths'][i],
                     arch['strides'][i],
                     padding=arch['padding'][i],
-                    activation=activation,
+                    activation=tf.nn.relu,
                     name='Deconv_' + str(i),
                     trainable=False
                 )
@@ -58,7 +58,7 @@ class AvatarSynthModel(ModelDesc):
                     1,
                     1,
                     padding='SAME',
-                    activation=tf.nn.relu,
+                    activation=activation,
                     kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Conv_' + str(i),
