@@ -43,13 +43,10 @@ def get_config(args, model, num_gpus, num_towers):
     if num_gpus > 0:
         callbacks.append(cb.GPUUtilizationTracker())
 
-    if num_towers == 1:
-        # single-GPU inference with queue prefetch
+    if num_towers == 1: # single-GPU inference with queue prefetch
         callbacks.append(cb.InferenceRunner(QueueInput(df_test), infs))
-    else:
-        # multi-GPU inference (with mandatory queue prefetch)
-        callbacks.append(cb.DataParallelInferenceRunner(
-            df_test, infs, list(range(num_towers))))
+    else: # multi-GPU inference (with mandatory queue prefetch)
+        callbacks.append(cb.DataParallelInferenceRunner(df_test, infs, list(range(num_towers))))
 
     return TrainConfig(
         model=model,

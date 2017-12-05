@@ -243,7 +243,7 @@ class Selfie2BitmojiModel(ModelDesc):
         return preds
 
     # TODO: Pretrain this with supervised data?
-    def _param_encoder(self, gen_faces, reuse=tf.AUTO_REUSE):
+    def _param_encoder(self, gen_faces):
         """
         Constructs and computes the parameter encoder model.
 
@@ -252,7 +252,7 @@ class Selfie2BitmojiModel(ModelDesc):
 
         :return: A batch of predicted Bitmoji parameter vectors for gen_faces.
         """
-        with tf.variable_scope('Param_Encoder'):
+        with tf.variable_scope('Param_Encoder', reuse=tf.AUTO_REUSE):
             arch = archs.param_encoder_model
 
             preds = gen_faces
