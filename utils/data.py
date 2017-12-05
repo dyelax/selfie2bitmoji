@@ -39,10 +39,10 @@ class AvatarSynthDataFlow(RNGDataFlow):
         for npy_path in self.npy_paths:
             img_path = npy_path[:-4] + '.png'
 
-            if exists(img_path):
-                yield [npy_path, img_path]
-            else:
-                print 'Image does not exist: %s' % img_path
+            # if exists(img_path):
+            yield [npy_path, img_path]
+            # else:
+            #     print 'Image does not exist: %s' % img_path
 
 
 def process_avatar_synth_data(df, batch_size):
