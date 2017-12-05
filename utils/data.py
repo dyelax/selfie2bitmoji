@@ -20,29 +20,27 @@ class AvatarSynthDataFlow(RNGDataFlow):
         :param dir: Directory with .npy and .png files containing parameters and
                     images. Paired params and images should have the same
                     filename (except extension).
-        :param dims: (h, w) tuple. If given, resize images to these dimensions.
-        :param val_range: (min, max) tuple. Rescale images to this range.
         :param shuffle: Shuffle the input order for each epoch.
         """
-        npy_paths = glob(join(dir, '*.npy'))
-        assert len(npy_paths) > 0, 'No .npy files in dir %s.' % dir
-        self.npy_paths = npy_paths
+        png_paths = glob(join(dir, '*.png'))
+        assert len(png_paths) > 0, 'No .png files in dir %s.' % dir
+        self.png_paths = png_paths
         self.shuffle = shuffle
 
     def size(self):
-        return len(self.npy_paths)
+        return len(self.png_paths)
 
     def get_data(self):
         if self.shuffle:
-            self.rng.shuffle(self.npy_paths)
+            self.rng.shuffle(self.png_paths)
 
-        for npy_path in self.npy_paths:
-            img_path = npy_path[:-4] + '.png'
+        for png_path in self.png_paths:
+            npy_path = png_path.rpartition('.')[0] + '.npy'
 
-            # if exists(img_path):
-            yield [npy_path, img_path]
-            # else:
-            #     print 'Image does not exist: %s' % img_path
+            if exists(npy_path):
+                yield [npy_path, png_path]
+            else:
+                print 'File not found: %s' % npy_path
 
 
 def process_avatar_synth_data(df, batch_size):
