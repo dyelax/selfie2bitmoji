@@ -1,7 +1,7 @@
 import numpy as np
 from tensorpack.dataflow import (
     MultiThreadMapData, imgaug, PrefetchDataZMQ,
-    RNGDataFlow, BatchData)
+    RNGDataFlow, BatchData, AugmentImageComponent)
 import cv2
 from imageio import imread
 from glob import glob
@@ -57,10 +57,12 @@ def process_avatar_synth_data(df, batch_size, num_threads):
         imgaug.MinMaxNormalize(min=-1, max=1)
     ])
 
-    df = MultiThreadMapData(df, nr_thread=num_threads,
-                            map_func=lambda dp: [np.load(dp[0]), augmentor.augment(imread(dp[1]))],
-                            buffer_size=min(1000, df.size()))
-    df = PrefetchDataZMQ(df, nr_proc=1)
+    # df = MultiThreadMapData(df, nr_thread=num_threads,
+    #                         map_func=lambda dp: [np.load(dp[0]), augmentor.augment(imread(dp[1]))],
+    #                         buffer_size=min(1000, df.size()))
+
+    df = AugmentImageComponent(df, augmentor)
+    df = PrefetchDataZMQ(df, nr_proc=num_threads)
     df = BatchData(df, batch_size, remainder=True)
 
     return df
