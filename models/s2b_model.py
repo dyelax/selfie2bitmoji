@@ -48,7 +48,7 @@ class Selfie2BitmojiModel(ModelDesc):
         d_preds_fake = self._discriminator(gen_faces)
 
         # Other misc results for losses
-        gen_face_encodings = self.face_encoder(gen_faces)
+        gen_face_encodings = self._face_encoder(gen_faces)
         regen_bitmoji = self._generator(self._face_encoder(bitmoji_imgs))
 
         batch_size, height, width, channels = gen_faces.shape
@@ -124,7 +124,7 @@ class Selfie2BitmojiModel(ModelDesc):
 
         :return: A batch of facial feature encodings for imgs.
         """
-        with tf.variable_scope('Face_Encoder/Encode'):
+        with tf.variable_scope('Face_Encoder/Encode', reuse=tf.AUTO_REUSE):
             conv1 = tf.nn.relu(vae_gan.batch_normal(vae_gan.conv2d(
                 imgs, output_dim=64, name='e_c1'), scope='e_bn1'))
             conv2 = tf.nn.relu(vae_gan.batch_normal(vae_gan.conv2d(
@@ -140,7 +140,7 @@ class Selfie2BitmojiModel(ModelDesc):
             z_sigma = vae_gan.fully_connect(fc1, output_size=archs.FACE_ENCODING_SIZE, scope='e_f3')
 
             z_x = tf.add(z_mean, (tf.sqrt(tf.exp(z_sigma)) *
-                                  tf.random_normal(shape=[None, archs.FACE_ENCODING_SIZE])))
+                                  tf.random_normal(shape=(self.args.batch_size, archs.FACE_ENCODING_SIZE))))
 
             return z_x
 
@@ -153,10 +153,20 @@ class Selfie2BitmojiModel(ModelDesc):
 
         :return: A batch of Bitmoji-style faces generated from encodings.
         """
-        with tf.name_scope('Generator'):
+        with tf.variable_scope('Generator', reuse=tf.AUTO_REUSE):
             arch = archs.generator_model
 
-            preds = encodings
+            # Unshared fc layer to make sure face and bitmoji encodings (different sizes) can both
+            # be used as inputs
+            preds = tf.layers.dense(encodings,
+                                    archs.GENERATOR_INPUT_SIZE,
+                                    activation=tf.nn.relu,
+                                    kernel_initializer=narrow_truncated_normal_initializer,
+                                    bias_initializer=tf.zeros_initializer,
+                                    name='FC',
+                                    reuse=False)
+            preds = tf.reshape(preds, (-1, 1, 1, archs.GENERATOR_INPUT_SIZE))
+
             for i in xrange(len(arch['conv_filters']) - 1):
                 # Apply ReLU on all but the last layer
                 activation = tf.nn.relu
@@ -173,7 +183,6 @@ class Selfie2BitmojiModel(ModelDesc):
                     kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Deconv_' + str(i),
-                    reuse=tf.AUTO_REUSE,
                 )
 
                 preds = tf.layers.conv2d_transpose(
@@ -186,14 +195,12 @@ class Selfie2BitmojiModel(ModelDesc):
                     kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Conv_' + str(i),
-                    reuse=tf.AUTO_REUSE,
                 )
 
                 # Apply batch norm on all but the last layer
                 if i < len(arch['conv_filters']) - 2:
                     preds = tf.layers.batch_normalization(preds,
-                                                          name='BN_' + str(i),
-                                                          reuse=tf.AUTO_REUSE)
+                                                          name='BN_' + str(i))
                     preds = tpDropout(preds, keep_prob=self.args.keep_prob)
 
         return preds
@@ -207,7 +214,7 @@ class Selfie2BitmojiModel(ModelDesc):
         :return: A batch of predictions, whether each image in imgs is real or
                  generated.
         """
-        with tf.name_scope('Discriminator'):
+        with tf.variable_scope('Discriminator', reuse=tf.AUTO_REUSE):
             arch = archs.avatar_synth_model
 
             preds = imgs
@@ -227,20 +234,18 @@ class Selfie2BitmojiModel(ModelDesc):
                     kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Conv_' + str(i),
-                    reuse=tf.AUTO_REUSE,
                 )
 
                 # Apply batch norm and dropout on all but the last layer
                 if i < len(arch['conv_filters']) - 2:
                     preds = tf.layers.batch_normalization(preds,
-                                                          name='BN_' + str(i),
-                                                          reuse=tf.AUTO_REUSE)
+                                                          name='BN_' + str(i))
                     preds = tpDropout(preds, keep_prob=self.args.keep_prob)
 
         return preds
 
     # TODO: Pretrain this with supervised data?
-    def _param_encoder(self, gen_faces):
+    def _param_encoder(self, gen_faces, reuse=tf.AUTO_REUSE):
         """
         Constructs and computes the parameter encoder model.
 
@@ -249,7 +254,7 @@ class Selfie2BitmojiModel(ModelDesc):
 
         :return: A batch of predicted Bitmoji parameter vectors for gen_faces.
         """
-        with tf.name_scope('Param_Encoder'):
+        with tf.variable_scope('Param_Encoder'):
             arch = archs.param_encoder_model
 
             preds = gen_faces
@@ -269,21 +274,20 @@ class Selfie2BitmojiModel(ModelDesc):
                     kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Conv_' + str(i),
-                    reuse=tf.AUTO_REUSE,
                 )
 
                 # Apply batch norm and dropout on all but the last layer
                 if i < len(arch['conv_filters']) - 2:
                     preds = tf.layers.batch_normalization(preds,
-                                                          name='BN_' + str(i),
-                                                          reuse=tf.AUTO_REUSE)
+                                                          name='BN_' + str(i))
                     preds = tpDropout(preds, keep_prob=self.args.keep_prob)
 
             # Split param types and softmax to get binary vector with only one
             # truth value for each param type
-            param_sets = tf.split(preds, BITMOJI_PARAM_SPLIT, name='Split')
+            preds = tf.layers.flatten(preds, name='Flatten')
+            param_sets = tf.split(preds, BITMOJI_PARAM_SPLIT, axis=1, name='Split')
             # TODO: softmax with low temp to act as sharp max?
-            preds = tf.concat([tf.nn.softmax(param_set) for param_set in param_sets], 0,
+            preds = tf.concat([tf.nn.softmax(param_set) for param_set in param_sets], 1,
                               name='Concat')
 
 
@@ -299,7 +303,7 @@ class Selfie2BitmojiModel(ModelDesc):
 
         :return: A batch of Bitmoji images synthesized from params.
         """
-        with tf.name_scope('Avatar_Synth'):
+        with tf.variable_scope('Avatar_Synth', reuse=tf.AUTO_REUSE):
             arch = archs.avatar_synth_model
 
             # Reshape params into a 1x1 'image' for convolution
@@ -318,14 +322,12 @@ class Selfie2BitmojiModel(ModelDesc):
                     padding=arch['padding'][i],
                     activation=activation,
                     name='Deconv_' + str(i),
-                    reuse=tf.AUTO_REUSE,
                     trainable=False
                 )
 
                 # Apply batch norm on all but the last layer
                 if i < len(arch['conv_filters']) - 2:
                     preds = tf.layers.batch_normalization(preds,
-                                                          name='BN_' + str(i),
-                                                          reuse=tf.AUTO_REUSE)
+                                                          name='BN_' + str(i))
 
         return preds
