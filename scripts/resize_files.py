@@ -4,7 +4,7 @@ from imageio import imread, imwrite
 import cv2
 import numpy as np
 
-paths = glob('../data/bitmoji/*/*.png')
+paths = glob('../data/bitmoji/*/*/*.png')
 
 total = len(paths)
 for i, path in enumerate(paths):
