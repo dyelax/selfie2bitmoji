@@ -34,16 +34,14 @@ def get_config(args, model, num_gpus, num_towers):
         cb.ModelSaver(),
         cb.MinSaver('val-error-top1'),
         # Approximate exponential decay of the learning rate
-        cb.ScheduledHyperParamSetterWithFunc('tower0/Avatar_Synth/LR:0',
-                                             lambda epoch, lr: lr * args.lr_decay),
+        cb.HyperParamSetterWithFunc('tower0/Avatar_Synth/LR:0', lambda _, lr: lr * args.lr_decay),
         cb.HumanHyperParamSetter('tower0/Avatar_Synth/LR:0'),
         cb.MergeAllSummaries(period=args.summary_freq),
-        cb.GPUUtilizationTracker()
     ]
     infs = [cb.ScalarStats('Avatar_Synth/Cost')]
 
-    # if num_gpus > 0:
-    #     callbacks.append(cb.GPUUtilizationTracker())
+    if num_gpus > 0:
+        callbacks.append(cb.GPUUtilizationTracker())
 
     if num_towers == 1:
         # single-GPU inference with queue prefetch
