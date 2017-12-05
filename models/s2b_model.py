@@ -199,8 +199,7 @@ class Selfie2BitmojiModel(ModelDesc):
 
                 # Apply batch norm on all but the last layer
                 if i < len(arch['conv_filters']) - 2:
-                    preds = tf.layers.batch_normalization(preds,
-                                                          name='BN_' + str(i))
+                    preds = tf.layers.batch_normalization(preds, name='BN_' + str(i))
                     preds = tpDropout(preds, keep_prob=self.args.keep_prob)
 
         return preds
@@ -238,8 +237,7 @@ class Selfie2BitmojiModel(ModelDesc):
 
                 # Apply batch norm and dropout on all but the last layer
                 if i < len(arch['conv_filters']) - 2:
-                    preds = tf.layers.batch_normalization(preds,
-                                                          name='BN_' + str(i))
+                    preds = tf.layers.batch_normalization(preds, name='BN_' + str(i))
                     preds = tpDropout(preds, keep_prob=self.args.keep_prob)
 
         return preds
@@ -278,8 +276,7 @@ class Selfie2BitmojiModel(ModelDesc):
 
                 # Apply batch norm and dropout on all but the last layer
                 if i < len(arch['conv_filters']) - 2:
-                    preds = tf.layers.batch_normalization(preds,
-                                                          name='BN_' + str(i))
+                    preds = tf.layers.batch_normalization(preds, name='BN_' + str(i))
                     preds = tpDropout(preds, keep_prob=self.args.keep_prob)
 
             # Split param types and softmax to get binary vector with only one
@@ -324,10 +321,21 @@ class Selfie2BitmojiModel(ModelDesc):
                     name='Deconv_' + str(i),
                     trainable=False
                 )
+                self.preds = tf.layers.conv2d_transpose(
+                    self.preds,
+                    arch['conv_filters'][i + 1],
+                    1,
+                    1,
+                    padding='SAME',
+                    activation=tf.nn.relu,
+                    kernel_initializer=narrow_truncated_normal_initializer,
+                    bias_initializer=tf.zeros_initializer,
+                    name='Conv_' + str(i),
+                    trainable=False
+                )
 
                 # Apply batch norm on all but the last layer
                 if i < len(arch['conv_filters']) - 2:
-                    preds = tf.layers.batch_normalization(preds,
-                                                          name='BN_' + str(i))
+                    preds = tf.layers.batch_normalization(preds, name='BN_' + str(i))
 
         return preds
