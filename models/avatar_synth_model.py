@@ -35,15 +35,15 @@ class AvatarSynthModel(ModelDesc):
             self.params, self.imgs = inputs
 
             # Reshape params into a 1x1 'image' for convolution
-            preds = tf.reshape(self.params, (-1, 1, 1, BITMOJI_PARAM_SIZE))
+            self.preds = tf.reshape(self.params, (-1, 1, 1, BITMOJI_PARAM_SIZE))
             for i in xrange(len(arch['conv_filters']) - 1):
                 # Apply ReLU on all but the last layer
                 activation = tf.nn.relu
                 if i == len(arch['conv_filters']) - 2:
                     activation = tf.nn.tanh
 
-                preds = tf.layers.conv2d_transpose(
-                    preds,
+                self.preds = tf.layers.conv2d_transpose(
+                    self.preds,
                     arch['conv_filters'][i + 1],
                     arch['filter_widths'][i],
                     arch['strides'][i],
@@ -67,12 +67,12 @@ class AvatarSynthModel(ModelDesc):
 
                 # Apply batch norm on all but the last layer
                 if i < len(arch['conv_filters']) - 2:
-                    preds = tf.layers.batch_normalization(preds, name='BN_' + str(i))
-                    preds = tpDropout(preds, keep_prob=self.args.keep_prob)
+                    self.preds = tf.layers.batch_normalization(self.preds, name='BN_' + str(i))
+                    self.preds = tpDropout(self.preds, keep_prob=self.args.keep_prob)
 
+            self.cost = tf.reduce_mean(tf.square(self.imgs - self.preds), name='Cost')
 
-            self.cost = tf.reduce_mean(tf.square(self.imgs - self.preds),
-                                       name='Cost')
+            self.lr = tf.Variable(self.args.lr, trainable=False, name='LR')
 
         with tf.name_scope('Summaries'):
             pred_comp = tf.concat([self.imgs, self.preds], axis=2)
@@ -80,6 +80,4 @@ class AvatarSynthModel(ModelDesc):
             tf.summary.scalar('Cost', self.cost)
 
     def _get_optimizer(self):
-        self.lr = tf.Variable(self.args.lr, trainable=False, name='Avatar_Synth/LR')
-        print(self.lr.name)
         return tf.train.AdamOptimizer(learning_rate=self.lr)

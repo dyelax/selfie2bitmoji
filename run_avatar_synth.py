@@ -30,10 +30,14 @@ def get_config(args, model, num_gpus, num_towers):
     df_train = avatar_synth_df(args.train_dir, args.batch_size)
     df_test = avatar_synth_df(args.test_dir, args.batch_size)
 
+
+    # Approximate exponential decay of the learning rate
+    lr_sched = [(i, args.lr * args.lr_decay ** i) for i in range(args.epochs)]
     callbacks = [
         cb.ModelSaver(),
         cb.MinSaver('val-error-top1'),
-        # cb.HumanHyperParamSetter('tower0/Avatar_Synth/LR:0'),
+        cb.ScheduledHyperParamSetter('tower0/Avatar_Synth/LR:0', lr_sched, interp='linear'),
+        cb.HumanHyperParamSetter('tower0/Avatar_Synth/LR:0'),
         cb.MergeAllSummaries(period=args.summary_freq),
     ]
     infs = [cb.ScalarStats('Avatar_Synth/Cost')]

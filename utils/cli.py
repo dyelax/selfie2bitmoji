@@ -30,6 +30,10 @@ def get_avatar_synth_args():
                         help='Learning rate',
                         default=3e-5,
                         type=float)
+    parser.add_argument('--lr_decay',
+                        help='The multiple by which to decay the learning rate every epoch',
+                        default=0.95,
+                        type=float)
     parser.add_argument('--keep_prob',
                         help='The keep probability for dropout (always 1 for testing)',
                         default=0.5,
