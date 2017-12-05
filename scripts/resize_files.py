@@ -6,15 +6,15 @@ import numpy as np
 
 paths = glob('../data/bitmoji/*/*.png')
 
-for path in np.random.choice(paths, 10):
+total = len(paths)
+for i, path in enumerate(paths):
     img = imread(path)
-    print img.shape
+    new_img = cv2.resize(img, (64, 64), interpolation=cv2.INTER_AREA)
+    os.remove(path)
+    imwrite(path, new_img)
 
-# total = len(paths)
-# for i, path in enumerate(paths):
+    print '%d / %d converted' % (i, total)
+
+# for path in np.random.choice(paths, 10):
 #     img = imread(path)
-#     new_img = cv2.resize(img, (64, 64), interpolation=cv2.INTER_AREA)
-#     os.remove(path)
-#     imwrite(path, new_img)
-#
-#     print '%d / %d converted' % (i, total)
+#     print img.shape

@@ -55,7 +55,6 @@ def process_avatar_synth_data(df, batch_size):
     :return: A dataflow with extra processing steps applied.
     """
     augmentor = imgaug.AugmentorList([
-        imgaug.Resize(IMG_DIMS[:-1], interp=cv2.INTER_AREA),
         imgaug.MinMaxNormalize(min=-1, max=1)
     ])
 
