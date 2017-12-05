@@ -62,7 +62,7 @@ def process_avatar_synth_data(df, batch_size, num_threads):
     #                         buffer_size=min(1000, df.size()))
 
     df = MapData(df, lambda dp: [np.load(dp[0]), augmentor.augment(imread(dp[1]))])
-    df = PrefetchDataZMQ(df, nr_proc=1)
+    df = PrefetchDataZMQ(df, nr_proc=num_threads)
     df = BatchData(df, batch_size, remainder=True)
 
     return df
