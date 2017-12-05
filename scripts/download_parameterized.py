@@ -9,7 +9,7 @@ import requests
 from PIL import Image
 
 import misc.bitmoji_api as api
-from misc import get_dir
+from utils.misc import get_dir
 
 
 def get_random_parameters():
