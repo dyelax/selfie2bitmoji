@@ -1,35 +1,7 @@
+# From https://github.com/zhangqianhui/vae-gan-tensorflow
+
 import tensorflow as tf
 from tensorflow.contrib.layers.python.layers import batch_norm
-
-from model_architectures import FACE_ENCODING_SIZE, IMG_DIMS
-
-# noinspection PyAttributeOutsideInit
-class vaegan(object):
-
-    #build model
-    def __init__(self):
-        self.images = tf.placeholder(tf.float32, (None,) + IMG_DIMS)
-        self.ep = tf.random_normal(shape=(None, FACE_ENCODING_SIZE))
-        self.build_model_vaegan()
-
-    def build_model_vaegan(self):
-        with tf.name_scope('Face_Encoder/Model'):
-            self.z_mean, self.z_sigm = self._encode(self.images)
-            self.z_x = tf.add(self.z_mean, tf.sqrt(tf.exp(self.z_sigm))*self.ep)
-
-    @staticmethod
-    def _encode(x):
-        with tf.variable_scope('Face_Encoder/Encode'):
-            conv1 = tf.nn.relu(batch_normal(conv2d(x, output_dim=64, name='e_c1'), scope='e_bn1'))
-            conv2 = tf.nn.relu(batch_normal(conv2d(conv1, output_dim=128, name='e_c2'), scope='e_bn2'))
-            conv3 = tf.nn.relu(batch_normal(conv2d(conv2, output_dim=256, name='e_c3'), scope='e_bn3'))
-            conv3 = tf.reshape(conv3, [-1, 256 * 8 * 8])
-            fc1 = tf.nn.relu(batch_normal(fully_connect(conv3, output_size=1024, scope='e_f1'), scope='e_bn4'))
-            z_mean = fully_connect(fc1, output_size=FACE_ENCODING_SIZE, scope='e_f2')
-            z_sigma = fully_connect(fc1, output_size=FACE_ENCODING_SIZE, scope='e_f3')
-
-            return z_mean, z_sigma
-
 
 def conv2d(input_, output_dim,
            k_h=5, k_w=5, d_h=2, d_w=2, stddev=0.02,

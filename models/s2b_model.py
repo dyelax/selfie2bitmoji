@@ -6,7 +6,10 @@ import model_architectures as archs
 
 from utils.tfutils import narrow_truncated_normal_initializer
 from utils.bitmoji_api import BITMOJI_PARAM_SPLIT, BITMOJI_PARAM_SIZE
+from utils import vae_gan
 
+
+# noinspection PyMethodMayBeStatic
 class Selfie2BitmojiModel(ModelDesc):
     """
     The "e" network from the paper. Trained to emulate the Bitmoji rendering
@@ -24,7 +27,6 @@ class Selfie2BitmojiModel(ModelDesc):
         """
         return [InputDesc(tf.float32, (None,) + archs.IMG_DIMS, 'Face_Images'),
                 InputDesc(tf.float32, (None,) + archs.IMG_DIMS, 'Bitmoji_Images')]
-
 
     def _build_graph(self, inputs):
         """
@@ -115,13 +117,32 @@ class Selfie2BitmojiModel(ModelDesc):
 
     def _face_encoder(self, imgs):
         """
-        Constructs and computes the face encoder model.
+        Constructs and computes the face encoder model. Architecture taken from
+        https://github.com/zhangqianhui/vae-gan-tensorflow
 
         :param imgs: The batch of images to encode into facial features.
 
         :return: A batch of facial feature encodings for imgs.
         """
-        pass
+        with tf.variable_scope('Face_Encoder/Encode'):
+            conv1 = tf.nn.relu(vae_gan.batch_normal(vae_gan.conv2d(
+                imgs, output_dim=64, name='e_c1'), scope='e_bn1'))
+            conv2 = tf.nn.relu(vae_gan.batch_normal(vae_gan.conv2d(
+                conv1, output_dim=128, name='e_c2'), scope='e_bn2'))
+            conv3 = tf.nn.relu(vae_gan.batch_normal(vae_gan.conv2d(
+                conv2, output_dim=256, name='e_c3'), scope='e_bn3'))
+            conv3 = tf.reshape(conv3, [-1, 256 * 8 * 8])
+
+            fc1 = tf.nn.relu(vae_gan.batch_normal(vae_gan.fully_connect(
+                conv3, output_size=1024, scope='e_f1'), scope='e_bn4'))
+
+            z_mean = vae_gan.fully_connect(fc1, output_size=archs.FACE_ENCODING_SIZE, scope='e_f2')
+            z_sigma = vae_gan.fully_connect(fc1, output_size=archs.FACE_ENCODING_SIZE, scope='e_f3')
+
+            z_x = tf.add(z_mean, (tf.sqrt(tf.exp(z_sigma)) *
+                                  tf.random_normal(shape=[None, archs.FACE_ENCODING_SIZE])))
+
+            return z_x
 
     def _generator(self, encodings):
         """
