@@ -8,7 +8,7 @@ import numpy as np
 import requests
 from PIL import Image
 
-import misc.bitmoji_api as api
+import utils.bitmoji_api as api
 from utils.misc import get_dir
 
 
