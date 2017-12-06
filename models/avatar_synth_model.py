@@ -52,7 +52,6 @@ class AvatarSynthModel(ModelDesc):
                     kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Deconv_' + str(i),
-                    trainable=False
                 )
                 self.preds = tf.layers.conv2d(
                     self.preds,
