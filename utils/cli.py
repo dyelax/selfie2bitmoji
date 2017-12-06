@@ -21,7 +21,7 @@ def get_avatar_synth_args():
                         help='Path of the model checkpoint to load')
     parser.add_argument('--epochs',
                         help='Number of epochs to train',
-                        default=1,
+                        default=maxint,
                         type=int)
     parser.add_argument('--batch_size',
                         help='Minibatch size',
