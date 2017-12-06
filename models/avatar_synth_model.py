@@ -78,6 +78,7 @@ class AvatarSynthModel(ModelDesc):
             pred_comp = tf.concat([self.imgs, self.preds], axis=2)
             tf.summary.image('Preds', pred_comp)
             tf.summary.scalar('Cost', self.cost)
+            tf.summary.scalar('LR', self.lr)
 
     def _get_optimizer(self):
         return tf.train.AdamOptimizer(learning_rate=self.lr)
