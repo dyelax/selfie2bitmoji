@@ -31,7 +31,7 @@ class AvatarSynthModel(ModelDesc):
 
         :param inputs: The input tensors fed in by TensorPack.
         """
-        with tf.name_scope('Avatar_Synth'):
+        with tf.variable_scope('Avatar_Synth', reuse=tf.AUTO_REUSE):
             self.params, self.imgs = inputs
 
             # Reshape params into a 1x1 'image' for convolution
@@ -50,7 +50,6 @@ class AvatarSynthModel(ModelDesc):
                     padding=arch['padding'][i],
                     activation=tf.nn.relu,
                     name='Deconv_' + str(i),
-                    reuse=tf.AUTO_REUSE,
                     trainable=False
                 )
                 self.preds = tf.layers.conv2d_transpose(
@@ -63,14 +62,12 @@ class AvatarSynthModel(ModelDesc):
                     kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Conv_' + str(i),
-                    reuse=tf.AUTO_REUSE,
                     trainable=False
                 )
 
                 # Apply batch norm on all but the last layer
                 if i < len(arch['conv_filters']) - 2:
-                    self.preds = tf.layers.batch_normalization(self.preds, name='BN_' + str(i),
-                                                               reuse=tf.AUTO_REUSE)
+                    self.preds = tf.layers.batch_normalization(self.preds, name='BN_' + str(i))
                     self.preds = tpDropout(self.preds, keep_prob=self.args.keep_prob)
 
             self.cost = tf.reduce_mean(tf.square(self.imgs - self.preds), name='Cost')
