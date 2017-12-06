@@ -49,10 +49,12 @@ class AvatarSynthModel(ModelDesc):
                     arch['strides'][i],
                     padding=arch['padding'][i],
                     activation=tf.nn.relu,
+                    kernel_initializer=narrow_truncated_normal_initializer,
+                    bias_initializer=tf.zeros_initializer,
                     name='Deconv_' + str(i),
                     trainable=False
                 )
-                self.preds = tf.layers.conv2d_transpose(
+                self.preds = tf.layers.conv2d(
                     self.preds,
                     arch['conv_filters'][i + 1],
                     1,
@@ -62,7 +64,6 @@ class AvatarSynthModel(ModelDesc):
                     kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Conv_' + str(i),
-                    trainable=False
                 )
 
                 # Apply batch norm on all but the last layer

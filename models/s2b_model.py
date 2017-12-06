@@ -179,19 +179,19 @@ class Selfie2BitmojiModel(ModelDesc):
                     arch['filter_widths'][i],
                     arch['strides'][i],
                     padding=arch['padding'][i],
-                    activation=activation,
+                    activation=tf.nn.relu,
                     kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Deconv_' + str(i),
                 )
 
-                preds = tf.layers.conv2d_transpose(
+                preds = tf.layers.conv2d(
                     preds,
                     arch['conv_filters'][i + 1],
                     1,
                     1,
                     padding='SAME',
-                    activation=tf.nn.relu,
+                    activation=activation,
                     kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Conv_' + str(i),
@@ -321,8 +321,8 @@ class Selfie2BitmojiModel(ModelDesc):
                     name='Deconv_' + str(i),
                     trainable=False
                 )
-                self.preds = tf.layers.conv2d_transpose(
-                    self.preds,
+                preds = tf.layers.conv2d(
+                    preds,
                     arch['conv_filters'][i + 1],
                     1,
                     1,
@@ -331,7 +331,6 @@ class Selfie2BitmojiModel(ModelDesc):
                     kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Conv_' + str(i),
-                    trainable=False
                 )
 
                 # Apply batch norm on all but the last layer
