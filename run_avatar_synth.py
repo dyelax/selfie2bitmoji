@@ -29,13 +29,17 @@ def get_config(args, model, num_gpus, num_towers):
     df_train = avatar_synth_df(args.train_dir, args.batch_size, args.num_threads)
     df_test = avatar_synth_df(args.test_dir, args.batch_size, args.num_threads)
 
+    def update_lr(epoch, cur_lr):
+        """ Approximate exponential decay of the learning rate """
+        if args.resume_lr:
+            return cur_lr * args.lr_decay
+        else:
+            return args.lr * args.lr_decay ** epoch
 
     callbacks = [
         cb.ModelSaver(),
         cb.MinSaver('val-error-top1'),
-        # Approximate exponential decay of the learning rate
-        cb.HyperParamSetterWithFunc('tower0/Avatar_Synth/LR:0', lambda _, lr: lr * args.lr_decay),
-        cb.HumanHyperParamSetter('tower0/Avatar_Synth/LR:0'),
+        cb.HyperParamSetterWithFunc('tower0/Avatar_Synth/LR:0', update_lr),
         cb.MergeAllSummaries(period=args.summary_freq),
     ]
     infs = [cb.ScalarStats('Avatar_Synth/Cost')]
