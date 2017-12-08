@@ -25,15 +25,15 @@ def get_avatar_synth_args():
                         type=int)
     parser.add_argument('--batch_size',
                         help='Minibatch size',
-                        default=128,
+                        default=512,
                         type=int)
     parser.add_argument('--lr',
                         help='Learning rate',
-                        default=3e-5,
+                        default=1e-4,
                         type=float)
     parser.add_argument('--lr_decay',
                         help='The multiple by which to decay the learning rate every epoch',
-                        default=0.95,
+                        default=0.96,
                         type=float)
     parser.add_argument('--resume_lr',
                         help='Resume the learning rate from the previous run',
@@ -47,7 +47,8 @@ def get_avatar_synth_args():
                         default=100,
                         type=int)
     parser.add_argument('--gpu',
-                        help='Comma separated list of GPU(s) to use')
+                        help='Comma separated list of GPU(s) to use',
+                        default='0')
     parser.add_argument('--num_threads',
                         help='The number of threads to read and process data',
                         default=32,
