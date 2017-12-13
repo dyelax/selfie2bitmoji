@@ -124,23 +124,24 @@ class Selfie2BitmojiModel(ModelDesc):
 
         :return: A batch of facial feature encodings for imgs.
         """
-        with tf.variable_scope('Face_Encoder/Encode', reuse=tf.AUTO_REUSE):
-            conv1 = tf.nn.relu(vae_gan.batch_normal(vae_gan.conv2d(
-                imgs, output_dim=64, name='e_c1'), scope='e_bn1'))
-            conv2 = tf.nn.relu(vae_gan.batch_normal(vae_gan.conv2d(
-                conv1, output_dim=128, name='e_c2'), scope='e_bn2'))
-            conv3 = tf.nn.relu(vae_gan.batch_normal(vae_gan.conv2d(
-                conv2, output_dim=256, name='e_c3'), scope='e_bn3'))
+        with tf.variable_scope('Face_Encoder', reuse=tf.AUTO_REUSE):
+            conv1 = tf.nn.relu(vae_gan.batch_normal(
+                vae_gan.conv2d(imgs, output_dim=64, name='Conv_0'), scope='BN_0'))
+            conv2 = tf.nn.relu(vae_gan.batch_normal(
+                vae_gan.conv2d(conv1, output_dim=128, name='Conv_1'), scope='BN_1'))
+            conv3 = tf.nn.relu(vae_gan.batch_normal(
+                vae_gan.conv2d(conv2, output_dim=256, name='Conv_2'), scope='BN_2'))
+
             conv3 = tf.reshape(conv3, [-1, 256 * 8 * 8])
 
-            fc1 = tf.nn.relu(vae_gan.batch_normal(vae_gan.fully_connect(
-                conv3, output_size=1024, scope='e_f1'), scope='e_bn4'))
+            fc1 = tf.nn.relu(vae_gan.batch_normal(
+                vae_gan.fully_connect(conv3, output_size=1024, scope='FC_0'), scope='BN_3'))
 
-            z_mean = vae_gan.fully_connect(fc1, output_size=archs.FACE_ENCODING_SIZE, scope='e_f2')
-            z_sigma = vae_gan.fully_connect(fc1, output_size=archs.FACE_ENCODING_SIZE, scope='e_f3')
+            z_mean = vae_gan.fully_connect(fc1, output_size=archs.FACE_ENCODING_SIZE, scope='FC_1')
+            z_sigma = vae_gan.fully_connect(fc1, output_size=archs.FACE_ENCODING_SIZE, scope='FC_2')
 
-            z_x = tf.add(z_mean, (tf.sqrt(tf.exp(z_sigma)) *
-                                  tf.random_normal(shape=(self.args.batch_size, archs.FACE_ENCODING_SIZE))))
+            z_x = z_mean + (tf.sqrt(tf.exp(z_sigma)) *
+                            tf.random_normal((self.args.batch_size, archs.FACE_ENCODING_SIZE)))
 
             return z_x
 

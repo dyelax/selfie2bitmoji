@@ -1,6 +1,5 @@
 import os
 import argparse
-from sys import maxint
 
 from tensorpack.utils.logger import set_logger_dir
 
@@ -93,11 +92,11 @@ def get_s2b_args():
                         type=int)
     parser.add_argument('--lr',
                         help='Learning rate',
-                        default=3e-5,
+                        default=1e-4,
                         type=float)
     parser.add_argument('--lr_decay',
                         help='The multiple by which to decay the learning rate every epoch',
-                        default=0.95,
+                        default=0.98,
                         type=float)
     parser.add_argument('--keep_prob',
                         help='The keep probability for dropout (always 1 for testing)',
