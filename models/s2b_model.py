@@ -1,5 +1,6 @@
 import tensorflow as tf
-from tensorpack import InputDesc, ModelDesc
+from tensorpack import InputDesc, ModelDesc, TowerTrainer
+from tensorpack.tfutils.tower import TowerContext, TowerFuncWrapper
 from tensorpack.models.regularize import Dropout as tpDropout
 
 import model_architectures as archs
@@ -51,13 +52,12 @@ class Selfie2BitmojiModel(ModelDesc):
         gen_face_encodings = self._face_encoder(gen_faces)
         regen_bitmoji = self._generator(self._face_encoder(bitmoji_imgs))
 
+        # Get shifted versions of the generated faced to compute pixel-wise gradients for l_tv
         batch_size, height, width, channels = gen_faces.shape
-        gen_faces_left_shift = tf.concat([gen_faces[:, :,1:,:],
-                                          tf.zeros((batch_size, height, 1, channels))],
-                                         axis=2)
-        gen_faces_up_shift = tf.concat([gen_faces[:, 1:,:,:],
-                                        tf.zeros((batch_size, 1, width, channels))],
-                                       axis=1)
+        gen_faces_left_shift = tf.concat(
+            [gen_faces[:, :,1:,:], tf.zeros((batch_size, height, 1, channels))], axis=2)
+        gen_faces_up_shift = tf.concat(
+            [gen_faces[:, 1:,:,:], tf.zeros((batch_size, 1, width, channels))], axis=1)
 
         ##
         # Losses:
@@ -95,6 +95,8 @@ class Selfie2BitmojiModel(ModelDesc):
                                            tf.square(gen_faces_up_shift - gen_faces)),
                                    name='L_tv')
 
+        self.lr = tf.Variable(self.args.lr, trainable=False, name='LR')
+
         with tf.name_scope('Summaries'):
             pred_comp = tf.concat([face_imgs, gen_faces, avatar_synth_faces], axis=2)
             tf.summary.image('Preds', pred_comp)
@@ -106,9 +108,9 @@ class Selfie2BitmojiModel(ModelDesc):
             tf.summary.scalar('L_tid', self.l_tid)
             tf.summary.scalar('L_tv', self.l_tv)
 
+            tf.summary.scalar('LR', self.lr)
+
     def _get_optimizer(self):
-        self.lr = tf.Variable(self.args.lr_g, trainable=False, name='Avatar_Synth/LR')
-        print(self.lr.name)
         return tf.train.AdamOptimizer(learning_rate=self.lr)
 
     ##
@@ -241,6 +243,9 @@ class Selfie2BitmojiModel(ModelDesc):
                     preds = tf.layers.batch_normalization(preds, name='BN_' + str(i))
                     preds = tpDropout(preds, keep_prob=self.args.keep_prob)
 
+            # Clip the discriminator values for stability
+            preds = tf.clip_by_value(preds, 0.1, 0.9)
+
         return preds
 
     # TODO: Pretrain this with supervised data?
@@ -339,3 +344,48 @@ class Selfie2BitmojiModel(ModelDesc):
                     preds = tf.layers.batch_normalization(preds, name='BN_' + str(i))
 
         return preds
+
+
+class S2BTrainer(TowerTrainer):
+    def __init__(self, input, model):
+        super(S2BTrainer, self).__init__()
+        # assert isinstance(model, GANModelDesc), model
+        inputs_desc = model.get_inputs_desc()
+        # Setup input
+        cbs = input.setup(inputs_desc)
+        self.register_callback(cbs)
+
+        """
+        We need to set tower_func because it's a TowerTrainer,
+        and only TowerTrainer supports automatic graph creation for inference during training.
+        If we don't care about inference during training, using tower_func is
+        not needed. Just calling model.build_graph directly is OK.
+        """
+        # Setup input
+        cbs = input.setup(model.get_inputs_desc())
+        self.register_callback(cbs)
+
+        # Build the graph
+        self.tower_func = TowerFuncWrapper(model.build_graph, inputs_desc)
+        with TowerContext('', is_training=True):
+            self.tower_func(*input.get_input_tensors())
+        opt = model.get_optimizer()
+
+        # Define the training iteration
+        # by default, run one d_min after one g_min
+        with tf.name_scope('Optimize'):
+            self.train_op_gan_d = opt.minimize(model.l_gan_d, var_list=model.vars_gan_g, name='Train_Op_gan_d')
+            self.train_op_gan_g = opt.minimize(model.l_gan_g, var_list=model.vars_gan_d, name='Train_Op_gan_g')
+            self.train_op_c = opt.minimize(model.l_c, var_list=model.vars_c, name='Train_Op_c')
+            self.train_op_const = opt.minimize(model.l_const, var_list=model.vars_const, name='Train_Op_const')
+            self.train_op_tid = opt.minimize(model.l_tid, var_list=model.vars_tid, name='Train_Op_tid')
+            self.train_op_tv = opt.minimize(model.l_tv, var_list=model.vars_tv, name='Train_Op_tv')
+
+    def run_step(self):
+        # TODO: Grouping and control dependencies for efficiency?
+        self.hooked_sess.run(self.train_op_gan_d)
+        self.hooked_sess.run(self.train_op_gan_g)
+        self.hooked_sess.run(self.train_op_c)
+        self.hooked_sess.run(self.train_op_const)
+        self.hooked_sess.run(self.train_op_tid)
+        self.hooked_sess.run(self.train_op_tv)
