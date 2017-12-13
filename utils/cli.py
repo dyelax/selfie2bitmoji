@@ -73,15 +73,16 @@ def get_s2b_args():
                         default='./data/bitmoji/test')
     parser.add_argument('--train_dir_face',
                         help='Directory of real face train data',
-                        default='./data/face/train')
+                        default='./data/celeba/train')
     parser.add_argument('--test_dir_face',
                         help='Directory of real face test data',
-                        default='./data/face/test')
+                        default='./data/celeba/test')
     parser.add_argument('--logger_dir',
                         help='Directory to save logs and model checkpoints',
                         default=os.path.join('save', 's2b', date_str()))
     parser.add_argument('--load_path',
-                        help='Path of the model checkpoint to load')
+                        help='Path of the model checkpoint to load',
+                        default=os.path.join('save', 's2b', date_str()))
     parser.add_argument('--epochs',
                         help='Number of epochs to train',
                         default=100000,
