@@ -26,8 +26,9 @@ class Selfie2BitmojiModel(ModelDesc):
         """
         :return: The input descriptions for TensorPack.
         """
-        return [InputDesc(tf.float32, (None,) + archs.IMG_DIMS, 'Face_Images'),
-                InputDesc(tf.float32, (None,) + archs.IMG_DIMS, 'Bitmoji_Images')]
+        # TODO: Get back to None for batch_size
+        return [InputDesc(tf.float32, (self.args.batch_size,) + archs.IMG_DIMS, 'Face_Images'),
+                InputDesc(tf.float32, (self.args.batch_size,) + archs.IMG_DIMS, 'Bitmoji_Images')]
 
     def _build_graph(self, inputs):
         """
@@ -95,7 +96,17 @@ class Selfie2BitmojiModel(ModelDesc):
                                            tf.square(gen_faces_up_shift - gen_faces)),
                                    name='L_tv')
 
+        ##
+        # Misc:
+        ##
+
+        # Dynamic learning rate
         self.lr = tf.Variable(self.args.lr, trainable=False, name='LR')
+
+        # Variable groups
+        self.g_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='Generator')
+        self.d_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='Discriminator')
+        self.c_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='Param_Encoder')
 
         with tf.name_scope('Summaries'):
             pred_comp = tf.concat([face_imgs, gen_faces, avatar_synth_faces], axis=2)
@@ -351,9 +362,13 @@ class S2BTrainer(TowerTrainer):
         super(S2BTrainer, self).__init__()
         # assert isinstance(model, GANModelDesc), model
         inputs_desc = model.get_inputs_desc()
+        print inputs_desc
+
         # Setup input
         cbs = input.setup(inputs_desc)
-        self.register_callback(cbs)
+        print cbs
+        for cb in cbs:
+            self.register_callback(cb)
 
         """
         We need to set tower_func because it's a TowerTrainer,
@@ -361,10 +376,6 @@ class S2BTrainer(TowerTrainer):
         If we don't care about inference during training, using tower_func is
         not needed. Just calling model.build_graph directly is OK.
         """
-        # Setup input
-        cbs = input.setup(model.get_inputs_desc())
-        self.register_callback(cbs)
-
         # Build the graph
         self.tower_func = TowerFuncWrapper(model.build_graph, inputs_desc)
         with TowerContext('', is_training=True):
@@ -374,12 +385,12 @@ class S2BTrainer(TowerTrainer):
         # Define the training iteration
         # by default, run one d_min after one g_min
         with tf.name_scope('Optimize'):
-            self.train_op_gan_d = opt.minimize(model.l_gan_d, var_list=model.vars_gan_g, name='Train_Op_gan_d')
-            self.train_op_gan_g = opt.minimize(model.l_gan_g, var_list=model.vars_gan_d, name='Train_Op_gan_g')
-            self.train_op_c = opt.minimize(model.l_c, var_list=model.vars_c, name='Train_Op_c')
-            self.train_op_const = opt.minimize(model.l_const, var_list=model.vars_const, name='Train_Op_const')
-            self.train_op_tid = opt.minimize(model.l_tid, var_list=model.vars_tid, name='Train_Op_tid')
-            self.train_op_tv = opt.minimize(model.l_tv, var_list=model.vars_tv, name='Train_Op_tv')
+            self.train_op_gan_d = opt.minimize(model.l_gan_d, var_list=model.d_vars, name='Train_Op_gan_d')
+            self.train_op_gan_g = opt.minimize(model.l_gan_g, var_list=model.g_vars, name='Train_Op_gan_g')
+            self.train_op_const = opt.minimize(model.l_const, var_list=model.g_vars, name='Train_Op_const')
+            self.train_op_tid = opt.minimize(model.l_tid, var_list=model.g_vars, name='Train_Op_tid')
+            self.train_op_tv = opt.minimize(model.l_tv, var_list=model.g_vars, name='Train_Op_tv')
+            self.train_op_c = opt.minimize(model.l_c, var_list=model.c_vars + model.g_vars, name='Train_Op_c')
 
     def run_step(self):
         # TODO: Grouping and control dependencies for efficiency?

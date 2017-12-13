@@ -82,7 +82,7 @@ def get_s2b_args():
                         default=os.path.join('save', 's2b', date_str()))
     parser.add_argument('--load_path',
                         help='Path of the model checkpoint to load',
-                        default=os.path.join('save', 's2b', date_str()))
+                        default=os.path.join('save', 's2b', 'default', 'model'))
     parser.add_argument('--epochs',
                         help='Number of epochs to train',
                         default=100000,
@@ -99,16 +99,19 @@ def get_s2b_args():
                         help='The multiple by which to decay the learning rate every epoch',
                         default=0.98,
                         type=float)
+    parser.add_argument('--resume_lr',
+                        help='Resume the learning rate from the previous run',
+                        action='store_true')
     parser.add_argument('--keep_prob',
                         help='The keep probability for dropout (always 1 for testing)',
-                        default=0.5,
+                        default=1.0,
                         type=float)
     parser.add_argument('--summary_freq',
                         help='Frequency (in steps) with which to write tensorboard summaries',
                         default=100,
                         type=int)
     parser.add_argument('--gpu',
-                        help='Comma separated list of GPU(s) to use')
+                        help='Which GPU to use')
     parser.add_argument('--num_threads',
                         help='The number of threads to read and process data',
                         default=32,

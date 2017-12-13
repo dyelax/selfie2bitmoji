@@ -106,7 +106,7 @@ class S2BBDataFlow(RNGDataFlow):
     def get_data(self):
         if self.shuffle:
             self.rng.shuffle(self.bitmoji_paths)
-            self.rng.shuffle(self.face_paths_paths)
+            self.rng.shuffle(self.face_paths)
 
         for i in xrange(self.size()):
             face_path = self.bitmoji_paths[i]
@@ -135,9 +135,12 @@ def process_s2b_data(df, batch_size, num_threads):
         """
         return [augmentor.augment(imread(dp[0])), augmentor.augment(imread(dp[1]))]
 
-    df = MultiThreadMapData(df, nr_thread=num_threads, map_func=get_imgs)
+    df = MultiThreadMapData(df, nr_thread=num_threads, map_func=get_imgs, buffer_size=min(df.size(), 200))
     df = PrefetchDataZMQ(df, nr_proc=num_threads)
-    df = BatchData(df, batch_size, remainder=True)
+
+    # TODO: switch back to remainder=True when s2b input batch size switched back to None
+    df = BatchData(df, batch_size, remainder=False)
+    # df = BatchData(df, batch_size, remainder=True)
 
     return df
 
@@ -154,7 +157,7 @@ def s2b_df(face_dir, bitmoji_dir, batch_size, num_threads):
     :return: A dataflow for parameter to bitmoji data
     """
     df = S2BBDataFlow(face_dir, bitmoji_dir)
-    df = process_avatar_synth_data(df, batch_size, num_threads)
+    df = process_s2b_data(df, batch_size, num_threads)
 
     return df
 
