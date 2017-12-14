@@ -143,7 +143,7 @@ class Selfie2BitmojiModel(ModelDesc):
             tf.summary.scalar('D_Uncertainty', self.d_uncertainty)
 
     def _get_optimizer(self):
-        return tf.train.AdamOptimizer(learning_rate=self.lr)
+        return tf.train.AdamOptimizer(learning_rate=self.lr, beta1=0.5)
 
     ##
     # Models
