@@ -427,7 +427,6 @@ class S2BTrainer(TowerTrainer):
         # self.hooked_sess.run(self.train_op_tv)
 
         _, d_certainty = self.hooked_sess.run([self.train_op_c_g, self.d_certainty])
-        print d_certainty
         if d_certainty < 0.6:
             self.hooked_sess.run(self.train_op_d)
 
