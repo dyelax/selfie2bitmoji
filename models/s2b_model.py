@@ -63,7 +63,7 @@ class Selfie2BitmojiModel(ModelDesc):
 
         # Use these to only update the discriminator if above a level of uncertainty
         self.d_uncertainty = tf.reduce_mean(tf.concat([(1 - d_preds_real), d_preds_fake], 0), name='D_Uncertainty')
-        self.d_uncertainty_threshold = tf.Variable(0.3, trainable=False, name='D_Uncertainty_Threshold')
+        self.d_uncertainty_threshold = tf.Variable(0.2, trainable=False, name='D_Uncertainty_Threshold')
 
         # Other misc results for losses
         gen_face_encodings = self._face_encoder(gen_faces)
@@ -143,7 +143,7 @@ class Selfie2BitmojiModel(ModelDesc):
             tf.summary.scalar('D_Uncertainty', self.d_uncertainty)
 
     def _get_optimizer(self):
-        return tf.train.AdamOptimizer(learning_rate=self.lr)
+        return tf.train.AdamOptimizer(learning_rate=self.lr, beta1=0.5)
 
     ##
     # Models
@@ -276,7 +276,7 @@ class Selfie2BitmojiModel(ModelDesc):
                     preds = tpDropout(preds, keep_prob=self.args.keep_prob)
 
             # Clip the discriminator values for stability
-            preds = tf.clip_by_value(preds, 0.1, 0.9)
+            # preds = tf.clip_by_value(preds, 0.1, 0.9)
 
         return preds
 
