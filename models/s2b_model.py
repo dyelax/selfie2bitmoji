@@ -391,19 +391,29 @@ class S2BTrainer(TowerTrainer):
         # Define the training iteration
         # by default, run one d_min after one g_min
         with tf.name_scope('Optimize'):
-            self.train_op_gan_d = opt.minimize(model.l_gan_d, var_list=model.d_vars, name='Train_Op_gan_d')
-            self.train_op_gan_g = opt.minimize(model.l_gan_g, var_list=model.g_vars, name='Train_Op_gan_g')
-            self.train_op_const = opt.minimize(model.l_const, var_list=model.g_vars, name='Train_Op_const')
-            self.train_op_tid = opt.minimize(model.l_tid, var_list=model.g_vars, name='Train_Op_tid')
-            self.train_op_tv = opt.minimize(model.l_tv, var_list=model.g_vars, name='Train_Op_tv')
-            self.train_op_c = opt.minimize(model.l_c, var_list=model.c_vars + model.g_vars, name='Train_Op_c')
+            train_op_d = opt.minimize(model.l_gan_d, var_list=model.d_vars, name='Train_Op_d')
 
-    def run_step(self):
-        # TODO: Grouping and control dependencies for efficiency?
-        self.hooked_sess.run(self.train_op_gan_d)
-        self.hooked_sess.run(self.train_op_gan_g)
-        self.hooked_sess.run(self.train_op_c)
-        self.hooked_sess.run(self.train_op_const)
-        self.hooked_sess.run(self.train_op_tid)
-        self.hooked_sess.run(self.train_op_tv)
+            with tf.control_dependencies([train_op_d]):
+                train_op_gan_g = opt.minimize(model.l_gan_g, var_list=model.g_vars, name='Train_Op_gan_g')
+                train_op_const = opt.minimize(model.l_const, var_list=model.g_vars, name='Train_Op_const')
+                train_op_tid = opt.minimize(model.l_tid, var_list=model.g_vars, name='Train_Op_tid')
+                train_op_tv = opt.minimize(model.l_tv, var_list=model.g_vars, name='Train_Op_tv')
+
+                train_op_g = tf.group(train_op_gan_g, train_op_const, train_op_tid, train_op_tv)
+
+                with tf.control_dependencies([train_op_g]):
+                    train_op_c_g = opt.minimize(model.l_c, var_list=model.c_vars + model.g_vars,
+                                                name='Train_Op_c_g')
+
+            self.train_op = train_op_c_g
+
+
+    # def run_step(self):
+    #     # TODO: Grouping and control dependencies for efficiency?
+    #     self.hooked_sess.run(self.train_op_gan_d)
+    #     self.hooked_sess.run(self.train_op_gan_g)
+    #     self.hooked_sess.run(self.train_op_c)
+    #     self.hooked_sess.run(self.train_op_const)
+    #     self.hooked_sess.run(self.train_op_tid)
+    #     self.hooked_sess.run(self.train_op_tv)
 
