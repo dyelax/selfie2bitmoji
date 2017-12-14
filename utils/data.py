@@ -109,8 +109,8 @@ class S2BBDataFlow(RNGDataFlow):
             self.rng.shuffle(self.face_paths)
 
         for i in xrange(self.size()):
-            face_path = self.bitmoji_paths[i]
-            bitmoji_path = self.face_paths[i]
+            face_path = self.face_paths[i]
+            bitmoji_path = self.bitmoji_paths[i]
 
             yield [face_path, bitmoji_path]
 
@@ -133,6 +133,7 @@ def process_s2b_data(df, batch_size, num_threads):
         """
         :param dp: A datapoint tuple, (path_to_face.jpg, path_to_bitmoji.jpg)
         """
+        # print dp
         return [augmentor.augment(imread(dp[0])), augmentor.augment(imread(dp[1]))]
 
     df = MultiThreadMapData(df, nr_thread=num_threads, map_func=get_imgs, buffer_size=min(df.size(), 200))
