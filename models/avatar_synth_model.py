@@ -2,10 +2,9 @@ import tensorflow as tf
 from tensorpack import InputDesc, ModelDesc
 from tensorpack.models.regularize import Dropout as tpDropout
 
-from model_architectures import IMG_DIMS
-from model_architectures import avatar_synth_model as arch
+from model_architectures import IMG_DIMS, avatar_synth_model as arch
 from utils.bitmoji_api import BITMOJI_PARAM_SIZE
-from utils.tfutils import narrow_truncated_normal_initializer
+from utils.avatar_synth import narrow_truncated_normal_initializer
 
 class AvatarSynthModel(ModelDesc):
     """
