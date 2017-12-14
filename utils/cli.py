@@ -89,7 +89,7 @@ def get_s2b_args():
                         type=int)
     parser.add_argument('--batch_size',
                         help='Minibatch size',
-                        default=512,
+                        default=128,
                         type=int)
     parser.add_argument('--lr',
                         help='Learning rate',
