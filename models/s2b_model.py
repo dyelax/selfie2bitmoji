@@ -60,6 +60,7 @@ class Selfie2BitmojiModel(ModelDesc):
 
         d_preds_real = self._discriminator(noisy_bitmoji_imgs)
         d_preds_fake = self._discriminator(noisy_gen_faces)
+        self.d_certainty = tf.reduce_mean(tf.concat([d_preds_real, (1 - d_preds_fake)], 0))
 
         # Other misc results for losses
         gen_face_encodings = self._face_encoder(gen_faces)
@@ -398,29 +399,35 @@ class S2BTrainer(TowerTrainer):
         # Define the training iteration
         # by default, run one d_min after one g_min
         with tf.name_scope('Optimize'):
-            train_op_d = opt.minimize(model.l_gan_d, var_list=model.d_vars, name='Train_Op_d')
+            self.train_op_d = opt.minimize(model.l_gan_d, var_list=model.d_vars, name='Train_Op_d')
 
-            with tf.control_dependencies([train_op_d]):
-                train_op_gan_g = opt.minimize(model.l_gan_g, var_list=model.g_vars, name='Train_Op_gan_g')
-                train_op_const = opt.minimize(model.l_const, var_list=model.g_vars, name='Train_Op_const')
-                train_op_tid = opt.minimize(model.l_tid, var_list=model.g_vars, name='Train_Op_tid')
-                train_op_tv = opt.minimize(model.l_tv, var_list=model.g_vars, name='Train_Op_tv')
+            # with tf.control_dependencies([train_op_d]):
+            train_op_gan_g = opt.minimize(model.l_gan_g, var_list=model.g_vars, name='Train_Op_gan_g')
+            train_op_const = opt.minimize(model.l_const, var_list=model.g_vars, name='Train_Op_const')
+            train_op_tid = opt.minimize(model.l_tid, var_list=model.g_vars, name='Train_Op_tid')
+            train_op_tv = opt.minimize(model.l_tv, var_list=model.g_vars, name='Train_Op_tv')
 
-                train_op_g = tf.group(train_op_gan_g, train_op_const, train_op_tid, train_op_tv)
+            train_op_g = tf.group(train_op_gan_g, train_op_const, train_op_tid, train_op_tv)
 
-                with tf.control_dependencies([train_op_g]):
-                    train_op_c_g = opt.minimize(model.l_c, var_list=model.c_vars + model.g_vars,
-                                                name='Train_Op_c_g')
+            with tf.control_dependencies([train_op_g]):
+                train_op_c_g = opt.minimize(model.l_c, var_list=model.c_vars + model.g_vars,
+                                            name='Train_Op_c_g')
 
-            self.train_op = train_op_c_g
+            self.train_op_c_g = train_op_c_g
+
+            self.d_certainty = model.d_certainty
 
 
-    # def run_step(self):
-    #     # TODO: Grouping and control dependencies for efficiency?
-    #     self.hooked_sess.run(self.train_op_gan_d)
-    #     self.hooked_sess.run(self.train_op_gan_g)
-    #     self.hooked_sess.run(self.train_op_c)
-    #     self.hooked_sess.run(self.train_op_const)
-    #     self.hooked_sess.run(self.train_op_tid)
-    #     self.hooked_sess.run(self.train_op_tv)
+    def run_step(self):
+        # self.hooked_sess.run(self.train_op_gan_d)
+        # self.hooked_sess.run(self.train_op_gan_g)
+        # self.hooked_sess.run(self.train_op_c)
+        # self.hooked_sess.run(self.train_op_const)
+        # self.hooked_sess.run(self.train_op_tid)
+        # self.hooked_sess.run(self.train_op_tv)
+
+        _, d_certainty = self.hooked_sess.run([self.train_op_c_g, self.d_certainty])
+        print d_certainty
+        if d_certainty < 0.6:
+            self.hooked_sess.run(self.train_op_d)
 
