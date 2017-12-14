@@ -26,6 +26,7 @@ def run(args):
         cb.ModelSaver(),
         cb.MinSaver('val-error-top1'),
         cb.HyperParamSetterWithFunc('LR', update_lr),
+        cb.HyperParamSetterWithFunc('Instance_Noise_Stddev', lambda epoch, stddev: stddev * args.lr_decay),
         cb.MergeAllSummaries(period=args.summary_freq),
     ]
     infs = [cb.ScalarStats(['L_c', 'L_const', 'L_gan_d', 'L_gan_g', 'L_tid', 'L_tv'])]

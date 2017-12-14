@@ -93,7 +93,7 @@ def get_s2b_args():
                         type=int)
     parser.add_argument('--lr',
                         help='Learning rate',
-                        default=1e-3,
+                        default=1e-4,
                         type=float)
     parser.add_argument('--lr_decay',
                         help='The multiple by which to decay the learning rate every epoch',

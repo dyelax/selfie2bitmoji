@@ -52,8 +52,14 @@ class Selfie2BitmojiModel(ModelDesc):
         avatar_synth_faces = self._avatar_synth(params)
 
         # GAN discriminator predictions
-        d_preds_real = self._discriminator(bitmoji_imgs)
-        d_preds_fake = self._discriminator(gen_faces)
+        # Use instance noise to stabilize training
+        noise_stddev = tf.Variable(0.1, trainable=False, name='Instance_Noise_Stddev')
+        instance_noise = tf.random_normal(tf.shape(face_imgs), stddev=noise_stddev)
+        noisy_bitmoji_imgs = bitmoji_imgs + instance_noise
+        noisy_gen_faces = gen_faces + instance_noise
+
+        d_preds_real = self._discriminator(noisy_bitmoji_imgs)
+        d_preds_fake = self._discriminator(noisy_gen_faces)
 
         # Other misc results for losses
         gen_face_encodings = self._face_encoder(gen_faces)
@@ -193,7 +199,7 @@ class Selfie2BitmojiModel(ModelDesc):
 
             for i in xrange(len(arch['conv_filters']) - 1):
                 # Apply ReLU on all but the last layer
-                activation = tf.nn.relu
+                activation = tf.nn.leaky_relu
                 if i == len(arch['conv_filters']) - 2:
                     activation = tf.nn.tanh
 
@@ -203,7 +209,7 @@ class Selfie2BitmojiModel(ModelDesc):
                     arch['filter_widths'][i],
                     arch['strides'][i],
                     padding=arch['padding'][i],
-                    activation=tf.nn.relu,
+                    activation=tf.nn.leaky_relu,
                     kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Deconv_' + str(i),
@@ -254,6 +260,7 @@ class Selfie2BitmojiModel(ModelDesc):
                     arch['strides'][i],
                     padding=arch['padding'][i],
                     activation=activation,
+                    kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Conv_' + str(i),
                 )

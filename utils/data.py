@@ -2,13 +2,9 @@ import numpy as np
 from tensorpack.dataflow import (
     MultiThreadMapData, imgaug, PrefetchDataZMQ,
     RNGDataFlow, BatchData, MapData)
-import cv2
 from imageio import imread
 from glob import glob
 from os.path import join, exists
-from os import remove
-
-from models.model_architectures import IMG_DIMS
 
 
 class AvatarSynthDataFlow(RNGDataFlow):
