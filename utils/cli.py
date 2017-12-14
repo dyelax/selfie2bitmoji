@@ -105,7 +105,7 @@ def get_s2b_args():
                         action='store_true')
     parser.add_argument('--keep_prob',
                         help='The keep probability for dropout (always 1 for testing)',
-                        default=1.0,
+                        default=0.5,
                         type=float)
     parser.add_argument('--summary_freq',
                         help='Frequency (in steps) with which to write tensorboard summaries',
