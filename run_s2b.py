@@ -27,7 +27,7 @@ def run(args):
         cb.MinSaver('val-error-top1'),
         cb.HyperParamSetterWithFunc('LR', update_lr),
         cb.HyperParamSetterWithFunc('Instance_Noise_Stddev', lambda epoch, stddev: stddev * args.decay),
-        cb.HyperParamSetterWithFunc('D_Uncertainty_Threshold', lambda epoch, threshold: threshold * args.decay),
+        # cb.HyperParamSetterWithFunc('D_Uncertainty_Threshold', lambda epoch, threshold: threshold * args.decay),
         cb.MergeAllSummaries(period=args.summary_freq),
     ]
     infs = [cb.ScalarStats(['L_c', 'L_const', 'L_gan_d', 'L_gan_g', 'L_tid', 'L_tv'])]

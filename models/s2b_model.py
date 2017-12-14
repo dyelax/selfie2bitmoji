@@ -53,7 +53,7 @@ class Selfie2BitmojiModel(ModelDesc):
 
         # GAN discriminator predictions
         # Use instance noise to stabilize training
-        noise_stddev = tf.Variable(0.1, trainable=False, name='Instance_Noise_Stddev')
+        noise_stddev = tf.Variable(0.05, trainable=False, name='Instance_Noise_Stddev')
         instance_noise = tf.random_normal(tf.shape(face_imgs), stddev=noise_stddev)
         noisy_bitmoji_imgs = bitmoji_imgs + instance_noise
         noisy_gen_faces = gen_faces + instance_noise
@@ -63,7 +63,7 @@ class Selfie2BitmojiModel(ModelDesc):
 
         # Use these to only update the discriminator if above a level of uncertainty
         self.d_uncertainty = tf.reduce_mean(tf.concat([(1 - d_preds_real), d_preds_fake], 0), name='D_Uncertainty')
-        self.d_uncertainty_threshold = tf.Variable(0.3, trainable=False, name='D_Uncertainty_Threshold')
+        self.d_uncertainty_threshold = tf.Variable(0.2, trainable=False, name='D_Uncertainty_Threshold')
 
         # Other misc results for losses
         gen_face_encodings = self._face_encoder(gen_faces)
