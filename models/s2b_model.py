@@ -60,7 +60,10 @@ class Selfie2BitmojiModel(ModelDesc):
 
         d_preds_real = self._discriminator(noisy_bitmoji_imgs)
         d_preds_fake = self._discriminator(noisy_gen_faces)
-        self.d_certainty = tf.reduce_mean(tf.concat([d_preds_real, (1 - d_preds_fake)], 0))
+
+        # Use these to only update the discriminator if above a level of uncertainty
+        self.d_uncertainty = tf.reduce_mean(tf.concat([(1 - d_preds_real), d_preds_fake], 0), name='D_Uncertainty')
+        self.d_uncertainty_threshold = tf.Variable(0.3, trainable=False, name='D_Uncertainty_Threshold')
 
         # Other misc results for losses
         gen_face_encodings = self._face_encoder(gen_faces)
@@ -137,6 +140,7 @@ class Selfie2BitmojiModel(ModelDesc):
             tf.summary.scalar('L_tv', self.l_tv)
 
             tf.summary.scalar('LR', self.lr)
+            tf.summary.scalar('D_Uncertainty', self.d_uncertainty)
 
     def _get_optimizer(self):
         return tf.train.AdamOptimizer(learning_rate=self.lr)
@@ -415,7 +419,8 @@ class S2BTrainer(TowerTrainer):
 
             self.train_op_c_g = train_op_c_g
 
-            self.d_certainty = model.d_certainty
+            self.d_uncertainty = model.d_uncertainty
+            self.threshold = model.d_uncertainty_threshold
 
 
     def run_step(self):
@@ -426,7 +431,9 @@ class S2BTrainer(TowerTrainer):
         # self.hooked_sess.run(self.train_op_tid)
         # self.hooked_sess.run(self.train_op_tv)
 
-        _, d_certainty = self.hooked_sess.run([self.train_op_c_g, self.d_certainty])
-        if d_certainty < 0.6:
+        _, d_uncertainty, threshold = self.hooked_sess.run(
+            [self.train_op_c_g, self.d_uncertainty, self.threshold])
+
+        if d_uncertainty > threshold:
             self.hooked_sess.run(self.train_op_d)
 

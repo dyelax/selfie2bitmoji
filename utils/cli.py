@@ -95,8 +95,9 @@ def get_s2b_args():
                         help='Learning rate',
                         default=1e-4,
                         type=float)
-    parser.add_argument('--lr_decay',
-                        help='The multiple by which to decay the learning rate every epoch',
+    parser.add_argument('--decay',
+                        help='The multiple by which to decay learning rate, instance noise stddev '
+                             'and discriminator uncertainty threshhold every epoch',
                         default=0.98,
                         type=float)
     parser.add_argument('--resume_lr',
