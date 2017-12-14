@@ -133,7 +133,12 @@ def process_s2b_data(df, batch_size, num_threads):
         """
         :param dp: A datapoint tuple, (path_to_face.jpg, path_to_bitmoji.jpg)
         """
-        return [augmentor.augment(imread(dp[0])), augmentor.augment(imread(dp[1]))]
+        face_img = augmentor.augment(imread(dp[0]))
+        bitmoji_img = augmentor.augment(imread(dp[1]))
+        if len(face_img.shape) == 2: face_img = np.stack([face_img] * 3, axis=-1)
+        if len(bitmoji_img.shape) == 2: bitmoji_img = np.stack([bitmoji_img] * 3, axis=-1)
+
+        return [face_img, bitmoji_img]
 
     df = MultiThreadMapData(df, nr_thread=num_threads, map_func=get_imgs, buffer_size=min(df.size(), 200))
     df = PrefetchDataZMQ(df, nr_proc=num_threads)
