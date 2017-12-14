@@ -5,6 +5,7 @@ from tensorpack.models.regularize import Dropout as tpDropout
 
 import model_architectures as archs
 
+from utils.s2b import narrow_truncated_normal_initializer
 from utils.bitmoji_api import BITMOJI_PARAM_SPLIT, BITMOJI_PARAM_SIZE
 from utils import vae_gan
 
@@ -184,6 +185,7 @@ class Selfie2BitmojiModel(ModelDesc):
             preds = tf.layers.dense(encodings,
                                     archs.GENERATOR_INPUT_SIZE,
                                     activation=tf.nn.relu,
+                                    kernel_initializer=narrow_truncated_normal_initializer,
                                     bias_initializer=tf.zeros_initializer,
                                     name='FC',
                                     reuse=False)
@@ -202,6 +204,7 @@ class Selfie2BitmojiModel(ModelDesc):
                     arch['strides'][i],
                     padding=arch['padding'][i],
                     activation=tf.nn.relu,
+                    kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Deconv_' + str(i),
                 )
@@ -213,6 +216,7 @@ class Selfie2BitmojiModel(ModelDesc):
                     1,
                     padding='SAME',
                     activation=activation,
+                    kernel_initializer=narrow_truncated_normal_initializer,
                     bias_initializer=tf.zeros_initializer,
                     name='Conv_' + str(i),
                 )
