@@ -352,11 +352,9 @@ class S2BTrainer(TowerTrainer):
         super(S2BTrainer, self).__init__()
         # assert isinstance(model, GANModelDesc), model
         inputs_desc = model.get_inputs_desc()
-        print inputs_desc
 
         # Setup input
         cbs = input.setup(inputs_desc)
-        print cbs
         for cb in cbs:
             self.register_callback(cb)
 

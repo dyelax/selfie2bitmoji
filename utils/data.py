@@ -133,7 +133,6 @@ def process_s2b_data(df, batch_size, num_threads):
         """
         :param dp: A datapoint tuple, (path_to_face.jpg, path_to_bitmoji.jpg)
         """
-        # print dp
         return [augmentor.augment(imread(dp[0])), augmentor.augment(imread(dp[1]))]
 
     df = MultiThreadMapData(df, nr_thread=num_threads, map_func=get_imgs, buffer_size=min(df.size(), 200))
