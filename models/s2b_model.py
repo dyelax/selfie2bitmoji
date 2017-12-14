@@ -5,9 +5,14 @@ from tensorpack.models.regularize import Dropout as tpDropout
 
 import model_architectures as archs
 
-from utils.s2b import narrow_truncated_normal_initializer
 from utils.bitmoji_api import BITMOJI_PARAM_SPLIT, BITMOJI_PARAM_SIZE
 from utils import vae_gan
+
+
+COEFF_L_GAN = 0.01
+COEFF_L_CONST = 100.0
+COEFF_L_TID = 1.0
+COEFF_L_TV = 0.0005
 
 
 # noinspection PyMethodMayBeStatic
@@ -72,23 +77,32 @@ class Selfie2BitmojiModel(ModelDesc):
         # L2 loss between the embedding of the input image and the embedding of
         # the first generated image. Generator learns to maintain structural
         # information from the embedding.
-        self.l_const = tf.reduce_mean(tf.square(face_encodings - gen_face_encodings), name='L_const')
+        self.l_const = tf.multiply(COEFF_L_CONST,
+                                   tf.reduce_mean(tf.square(face_encodings - gen_face_encodings)),
+                                   name='L_const')
 
         # Regular ol' gan loss. Enforces that generator generates in the style
         # of the target images
-        self.l_gan_d = tf.reduce_mean(-1 * (tf.log(1 - d_preds_fake) + tf.log(d_preds_real)), name='L_gan_d')
-        self.l_gan_g = tf.reduce_mean(-1 * (tf.log(d_preds_fake)), name='L_gan_g')
+        self.l_gan_d = tf.multiply(COEFF_L_GAN,
+                                   tf.reduce_mean(-1 * (tf.log(1 - d_preds_fake) + tf.log(d_preds_real))),
+                                   name='L_gan_d')
+        self.l_gan_g = tf.multiply(COEFF_L_GAN,
+                                   tf.reduce_mean(-1 * (tf.log(d_preds_fake))),
+                                   name='L_gan_g')
 
         # L2 loss between rendered Bitmoji images and those same images
         # regenerated (fed through the face encoder and generator). Encourages
         # the generator to be the identity function for Bitmoji images.
-        self.l_tid = tf.reduce_mean(tf.square(bitmoji_imgs - regen_bitmoji), name='L_tid')
+        self.l_tid = tf.multiply(COEFF_L_TID,
+                                 tf.reduce_mean(tf.square(bitmoji_imgs - regen_bitmoji)),
+                                 name='L_tid')
 
         # Sum of the pixel-wise gradients
         # Add small constant to avoid NaN gradient from sqrt(0)
-        self.l_tv = tf.reduce_mean(tf.sqrt(tf.square(gen_faces_left_shift - gen_faces) +
-                                           tf.square(gen_faces_up_shift - gen_faces) + 1e-8),
-                                   name='L_tv')
+        self.l_tv = tf.multiply(COEFF_L_TV,
+                                tf.reduce_mean(tf.sqrt(tf.square(gen_faces_left_shift - gen_faces) +
+                                                       tf.square(gen_faces_up_shift - gen_faces) + 1e-8)),
+                                name='L_tv')
 
 
         ##
