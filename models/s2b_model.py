@@ -63,7 +63,7 @@ class Selfie2BitmojiModel(ModelDesc):
 
         # Use these to only update the discriminator if above a level of uncertainty
         self.d_uncertainty = tf.reduce_mean(tf.concat([(1 - d_preds_real), d_preds_fake], 0), name='D_Uncertainty')
-        self.d_uncertainty_threshold = tf.Variable(0.2, trainable=False, name='D_Uncertainty_Threshold')
+        self.d_uncertainty_threshold = tf.Variable(0.3, trainable=False, name='D_Uncertainty_Threshold')
 
         # Other misc results for losses
         gen_face_encodings = self._face_encoder(gen_faces)
@@ -129,17 +129,15 @@ class Selfie2BitmojiModel(ModelDesc):
         self.c_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='Param_Encoder')
 
         with tf.name_scope('Summaries'):
-            # pred_comp = tf.concat([face_imgs, gen_faces, avatar_synth_faces], axis=2)
-            # tf.summary.image('Preds', pred_comp)
-            pred_comp = tf.concat([face_imgs, bitmoji_imgs, gen_faces], axis=2)
+            pred_comp = tf.concat([face_imgs, gen_faces, avatar_synth_faces], axis=2)
             tf.summary.image('Preds', pred_comp)
 
-            # tf.summary.scalar('L_c', self.l_c)
-            # tf.summary.scalar('L_const', self.l_const)
+            tf.summary.scalar('L_c', self.l_c)
+            tf.summary.scalar('L_const', self.l_const)
             tf.summary.scalar('L_gan_d', self.l_gan_d)
             tf.summary.scalar('L_gan_g', self.l_gan_g)
-            # tf.summary.scalar('L_tid', self.l_tid)
-            # tf.summary.scalar('L_tv', self.l_tv)
+            tf.summary.scalar('L_tid', self.l_tid)
+            tf.summary.scalar('L_tv', self.l_tv)
 
             tf.summary.scalar('LR', self.lr)
             tf.summary.scalar('D_Uncertainty', self.d_uncertainty)
@@ -278,7 +276,7 @@ class Selfie2BitmojiModel(ModelDesc):
                     preds = tpDropout(preds, keep_prob=self.args.keep_prob)
 
             # Clip the discriminator values for stability
-            preds = tf.clip_by_value(preds, 0.01, 0.99)
+            preds = tf.clip_by_value(preds, 0.1, 0.9)
 
         return preds
 
@@ -409,19 +407,17 @@ class S2BTrainer(TowerTrainer):
 
             # with tf.control_dependencies([train_op_d]):
             train_op_gan_g = opt.minimize(model.l_gan_g, var_list=model.g_vars, name='Train_Op_gan_g')
-            # train_op_const = opt.minimize(model.l_const, var_list=model.g_vars, name='Train_Op_const')
-            # train_op_tid = opt.minimize(model.l_tid, var_list=model.g_vars, name='Train_Op_tid')
-            # train_op_tv = opt.minimize(model.l_tv, var_list=model.g_vars, name='Train_Op_tv')
-            #
-            # train_op_g = tf.group(train_op_gan_g, train_op_const, train_op_tid, train_op_tv)
-            #
-            # with tf.control_dependencies([train_op_g]):
-            #     train_op_c_g = opt.minimize(model.l_c, var_list=model.c_vars + model.g_vars,
-            #                                 name='Train_Op_c_g')
-            #
-            # self.train_op_c_g = train_op_c_g
+            train_op_const = opt.minimize(model.l_const, var_list=model.g_vars, name='Train_Op_const')
+            train_op_tid = opt.minimize(model.l_tid, var_list=model.g_vars, name='Train_Op_tid')
+            train_op_tv = opt.minimize(model.l_tv, var_list=model.g_vars, name='Train_Op_tv')
 
-            self.train_op_c_g = train_op_gan_g
+            train_op_g = tf.group(train_op_gan_g, train_op_const, train_op_tid, train_op_tv)
+
+            with tf.control_dependencies([train_op_g]):
+                train_op_c_g = opt.minimize(model.l_c, var_list=model.c_vars + model.g_vars,
+                                            name='Train_Op_c_g')
+
+            self.train_op_c_g = train_op_c_g
 
             self.d_uncertainty = model.d_uncertainty
             self.threshold = model.d_uncertainty_threshold
