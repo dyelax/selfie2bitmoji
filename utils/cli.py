@@ -109,7 +109,7 @@ def get_s2b_args():
                         type=float)
     parser.add_argument('--summary_freq',
                         help='Frequency (in steps) with which to write tensorboard summaries',
-                        default=50,
+                        default=20,
                         type=int)
     parser.add_argument('--gpu',
                         help='Which GPU to use')
