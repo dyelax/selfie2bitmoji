@@ -407,17 +407,19 @@ class S2BTrainer(TowerTrainer):
 
             # with tf.control_dependencies([train_op_d]):
             train_op_gan_g = opt.minimize(model.l_gan_g, var_list=model.g_vars, name='Train_Op_gan_g')
-            train_op_const = opt.minimize(model.l_const, var_list=model.g_vars, name='Train_Op_const')
-            train_op_tid = opt.minimize(model.l_tid, var_list=model.g_vars, name='Train_Op_tid')
-            train_op_tv = opt.minimize(model.l_tv, var_list=model.g_vars, name='Train_Op_tv')
+            # train_op_const = opt.minimize(model.l_const, var_list=model.g_vars, name='Train_Op_const')
+            # train_op_tid = opt.minimize(model.l_tid, var_list=model.g_vars, name='Train_Op_tid')
+            # train_op_tv = opt.minimize(model.l_tv, var_list=model.g_vars, name='Train_Op_tv')
+            #
+            # train_op_g = tf.group(train_op_gan_g, train_op_const, train_op_tid, train_op_tv)
+            #
+            # with tf.control_dependencies([train_op_g]):
+            #     train_op_c_g = opt.minimize(model.l_c, var_list=model.c_vars + model.g_vars,
+            #                                 name='Train_Op_c_g')
+            #
+            # self.train_op_c_g = train_op_c_g
 
-            train_op_g = tf.group(train_op_gan_g, train_op_const, train_op_tid, train_op_tv)
-
-            with tf.control_dependencies([train_op_g]):
-                train_op_c_g = opt.minimize(model.l_c, var_list=model.c_vars + model.g_vars,
-                                            name='Train_Op_c_g')
-
-            self.train_op_c_g = train_op_c_g
+            self.train_op_c_g = train_op_gan_g
 
             self.d_uncertainty = model.d_uncertainty
             self.threshold = model.d_uncertainty_threshold
