@@ -129,15 +129,17 @@ class Selfie2BitmojiModel(ModelDesc):
         self.c_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='Param_Encoder')
 
         with tf.name_scope('Summaries'):
-            pred_comp = tf.concat([face_imgs, gen_faces, avatar_synth_faces], axis=2)
+            # pred_comp = tf.concat([face_imgs, gen_faces, avatar_synth_faces], axis=2)
+            # tf.summary.image('Preds', pred_comp)
+            pred_comp = tf.concat([face_imgs, bitmoji_imgs, gen_faces], axis=2)
             tf.summary.image('Preds', pred_comp)
 
-            tf.summary.scalar('L_c', self.l_c)
-            tf.summary.scalar('L_const', self.l_const)
+            # tf.summary.scalar('L_c', self.l_c)
+            # tf.summary.scalar('L_const', self.l_const)
             tf.summary.scalar('L_gan_d', self.l_gan_d)
             tf.summary.scalar('L_gan_g', self.l_gan_g)
-            tf.summary.scalar('L_tid', self.l_tid)
-            tf.summary.scalar('L_tv', self.l_tv)
+            # tf.summary.scalar('L_tid', self.l_tid)
+            # tf.summary.scalar('L_tv', self.l_tv)
 
             tf.summary.scalar('LR', self.lr)
             tf.summary.scalar('D_Uncertainty', self.d_uncertainty)
