@@ -53,7 +53,7 @@ class Selfie2BitmojiModel(ModelDesc):
 
         # GAN discriminator predictions
         # Use instance noise to stabilize training
-        noise_stddev = tf.Variable(0.05, trainable=False, name='Instance_Noise_Stddev')
+        noise_stddev = tf.Variable(0.1, trainable=False, name='Instance_Noise_Stddev')
         instance_noise = tf.random_normal(tf.shape(face_imgs), stddev=noise_stddev)
         noisy_bitmoji_imgs = bitmoji_imgs + instance_noise
         noisy_gen_faces = gen_faces + instance_noise
